@@ -1,0 +1,141 @@
+#include <stdio.h>
+#include <math.h>
+#include "sys/cm4.h"
+#include "sys/devices.h"
+#include "sys/init.h"
+#include "sys/clock.h"
+#include "sys/systick.h"
+#include "sys/serial_io.h"  /* Gives acces to usart 2*/
+
+volatile uint32_t flag_play_note;
+volatile uint32_t counter_duree_note;            /* Contine durata unei note */
+
+void init_buzzer_GPIOB();
+void init_TIM2();
+void sing_note(uint32_t frequency, uint32_t duree);
+void volume_setup(uint32_t volume); /* Aici trebuie modificata */
+void pause_entre_note();
+
+
+typedef struct{
+    
+	int freq;
+	int duree;
+    
+}Note;
+
+/*Note song_list[2] = {au_clair_de_la_lune, mon_beau_sapin};*/
+
+int main() {
+    
+    enable_USART2();        /* En usart */
+    init_buzzer_GPIOB();    /* setam portul pe AF */
+    init_TIM2();            /* Set up tim 2 pe pwm, canal , arr, psc -> 0, egr -> 1*/
+    SysTick_init(1000);     /* Starts systick */
+    printf("MAin ");
+    
+    while(1)
+        {
+             sing_note(392, 410);
+             pause_entre_note();
+        }
+    
+    
+    return 0;
+
+}
+
+
+void init_buzzer_GPIOB()
+{
+    enable_GPIOB(); /* buzzer */
+	GPIOB.MODER |= (2 << 18); /* alternate fonction mode */
+	GPIOB.AFRH |= (0b01 << 4); /* alternate mode sur AF1 (canal 2) */
+}
+
+void init_TIM2()
+{
+    /* Initialisation du timer */
+	RCC.APB1ENR |= 1;  //activation de l'horloge
+   
+	TIM2.CR1 &= ~(1<<4);  //bit DIR à 0 (mode compteur bit=0)(mode decompteur bit=1)
+	TIM2.CR1 &= ~(1<<1);  //bit UDIS à 0 (activation de évenements, update enable, UDIS=0)
+
+	TIM2.CNT = 0; /*mise a zero du compteur*/
+
+	/*TIM2.ARR &= ~(0x1111);*/ //auto-reload à 0
+
+	/*TIM2.PSC &= ~(0x1111);*/ //prescaleur à 0
+	TIM2.PSC |= 0 /*84;*/ //valeur du prescaleur (test : 20 000, valeur : 0 - 65536)
+	TIM2.EGR |= 0b1;	//sauvegarde
+	
+	/* Initialisation du PWM */
+	TIM2.CCMR1 &= 0x8FFF;
+	TIM2.CCMR1 |= 0x6000;
+	TIM2.CCMR1 |= (1<<11);
+	TIM2.CCMR1 &= ~(11<<8);
+	TIM2.CR1 |= (1<<7); 
+
+	TIM2.CCER |= (1<<4);
+	TIM2.CCER &= ~(1<<5);
+	TIM2.CCR2 = 15;		/* Influe sur le volume du buzzer */
+    
+    /*---------------------*/
+    
+   /* enable_TIM2();*/
+    
+    /*TIM2.CR1 |= (1 << 7);*//*ARPE*/
+   /* TIM2.CCMR1 |= 0x6800;*//*PWM mode 1 sur le canal 2 (output compare preload enable)*/
+	/*TIM2.EGR |= 1;*//*re-initialize registers and counter*/
+	/*TIM2.CCER |= (0b01 << 4);*//*CC2E=1 output enable*/
+    
+   /* TIM2.PSC = 0; *//*prescaler à 1*/
+   /* TIM2.CNT = 1;*/ /*initialise le compteur à 0*/
+	/*TIM2.CR1 |= 1; */
+    
+}
+
+void sing_note(uint32_t frequency, uint32_t duree)
+{
+    
+    TIM2.ARR = /*1000000*/ get_APB1TIMCLK() / frequency;  /*This is because we divide the clock of the timer with the prescaler wich is set up to 84*/
+    TIM2.EGR |= 0b1;
+    TIM2.CCR2 = 50; /* constant */
+    TIM2.CR1 |= 1;
+    
+    counter_duree_note = duree;
+    printf("sing ");
+    /* Flag play note */
+    /*flag_play_note = 1; */   
+    
+}
+
+void SysTick_Handler()
+{
+    if(counter_duree_note != 0) /*flag_play_note == 1*/
+        {
+            counter_duree_note = counter_duree_note - 1; /* here i can have a general constant that will change the value depending on how much time do we have to loose after to notes or even the song */
+            printf("sys ");
+        }
+    
+}
+
+void pause_entre_note()
+{
+    counter_duree_note = 5000;
+    /*flag_play_note = 1;*/
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

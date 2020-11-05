@@ -1,0 +1,3188 @@
+   1              		.syntax unified
+   2              		.arch armv7e-m
+   3              		.eabi_attribute 27, 1
+   4              		.eabi_attribute 28, 1
+   5              		.fpu fpv4-sp-d16
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 4
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.thumb
+  16              		.syntax unified
+  17              		.file	"initial_LED.c"
+  18              		.text
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	1
+  22              		.global	initialize_LEDs
+  23              		.thumb
+  24              		.thumb_func
+  25              		.type	initialize_LEDs, %function
+  26              	initialize_LEDs:
+  27              	.LFB398:
+  28              		.file 1 "src/sys/initial_LED.c"
+   1:src/sys/initial_LED.c **** #include <stdio.h>
+   2:src/sys/initial_LED.c **** #include "initial_LED.h"
+   3:src/sys/initial_LED.c **** #include "sys/devices.h"
+   4:src/sys/initial_LED.c **** 
+   5:src/sys/initial_LED.c **** 
+   6:src/sys/initial_LED.c **** volatile uint32_t step_4_LEDs; /* Variable which is modified in the main function that increments w
+   7:src/sys/initial_LED.c **** volatile uint32_t LED_flag; /* Variable that contains the state of the board. 0 = Play; 1 = Pause; 
+   8:src/sys/initial_LED.c **** volatile uint32_t LED_offset; /* Variable which allows us to restart the cycle of LEDs models each 
+   9:src/sys/initial_LED.c **** 
+  10:src/sys/initial_LED.c **** 
+  11:src/sys/initial_LED.c **** void initialize_LEDs()
+  12:src/sys/initial_LED.c **** {
+  29              		.loc 1 12 0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  34              	.LBB8:
+  35              	.LBB9:
+  36              		.file 2 "src/sys/devices.h"
+   1:src/sys/devices.h **** #ifndef __IO_H
+   2:src/sys/devices.h **** #define __IO_H
+   3:src/sys/devices.h **** 
+   4:src/sys/devices.h **** #include<stdint.h>
+   5:src/sys/devices.h **** #include "cm4.h"
+   6:src/sys/devices.h **** 
+   7:src/sys/devices.h **** #define __reserved(offset) \
+   8:src/sys/devices.h ****   uint32_t _reserved_ ## offset
+   9:src/sys/devices.h **** 
+  10:src/sys/devices.h **** #define __reserved_interval(offset1,offset2) \
+  11:src/sys/devices.h ****   uint32_t _reserved_ ## offset1 ## _ ## offset2[((offset2)-(offset1))/4]
+  12:src/sys/devices.h **** 
+  13:src/sys/devices.h **** /* PM §4.2.10 */ 
+  14:src/sys/devices.h **** struct MPU_registers {
+  15:src/sys/devices.h ****   uint32_t TYPER;
+  16:src/sys/devices.h ****   uint32_t CTRL;
+  17:src/sys/devices.h ****   uint32_t RNR;
+  18:src/sys/devices.h ****   uint32_t RBAR;
+  19:src/sys/devices.h ****   uint32_t RASR;
+  20:src/sys/devices.h ****   uint32_t RBAR_A1;
+  21:src/sys/devices.h ****   uint32_t RASR_A1;
+  22:src/sys/devices.h ****   uint32_t RBAR_A2;
+  23:src/sys/devices.h ****   uint32_t RASR_A2;
+  24:src/sys/devices.h ****   uint32_t RBAR_A3;
+  25:src/sys/devices.h ****   uint32_t RASR_A3;
+  26:src/sys/devices.h **** };
+  27:src/sys/devices.h **** 
+  28:src/sys/devices.h **** /* PM §4.3.11 */ 
+  29:src/sys/devices.h **** struct NVIC_registers {
+  30:src/sys/devices.h ****   uint32_t ISER[3];
+  31:src/sys/devices.h ****   __reserved_interval(0x0c,0x80);
+  32:src/sys/devices.h ****   uint32_t ICER[3];
+  33:src/sys/devices.h ****   __reserved_interval(0x8c,0x100);
+  34:src/sys/devices.h ****   uint32_t ISPR[3];
+  35:src/sys/devices.h ****   __reserved_interval(0x10c,0x180);
+  36:src/sys/devices.h ****   uint32_t ICPR[3];
+  37:src/sys/devices.h ****   __reserved_interval(0x18c,0x200);
+  38:src/sys/devices.h ****   uint32_t IABR[3];
+  39:src/sys/devices.h ****   __reserved_interval(0x20c,0x300);
+  40:src/sys/devices.h ****   uint8_t  IP[81];
+  41:src/sys/devices.h ****   uint8_t _reserved_bytes[3];
+  42:src/sys/devices.h **** };
+  43:src/sys/devices.h **** 
+  44:src/sys/devices.h **** /* PM §4.4.19 */ 
+  45:src/sys/devices.h **** struct SCB_registers {
+  46:src/sys/devices.h ****   uint32_t CPUID;
+  47:src/sys/devices.h ****   uint32_t ICSR;
+  48:src/sys/devices.h ****   uint32_t VTOR;
+  49:src/sys/devices.h ****   uint32_t AIRCR;
+  50:src/sys/devices.h ****   uint32_t SCR;
+  51:src/sys/devices.h ****   uint32_t CCR;
+  52:src/sys/devices.h ****   uint32_t SHPR1;
+  53:src/sys/devices.h ****   uint32_t SHPR2;
+  54:src/sys/devices.h ****   uint32_t SHPR3;
+  55:src/sys/devices.h ****   uint32_t SHCRS;
+  56:src/sys/devices.h ****   uint32_t CFSR;
+  57:src/sys/devices.h ****   uint32_t HFSR;
+  58:src/sys/devices.h ****   uint32_t MMAR;
+  59:src/sys/devices.h ****   uint32_t BFAR;
+  60:src/sys/devices.h ****   uint32_t AFSR;
+  61:src/sys/devices.h **** };
+  62:src/sys/devices.h **** 
+  63:src/sys/devices.h **** /* PM §4.5.6 */ 
+  64:src/sys/devices.h **** struct STK_registers {
+  65:src/sys/devices.h ****   uint32_t CTRL;
+  66:src/sys/devices.h ****   uint32_t LOAD;
+  67:src/sys/devices.h ****   uint32_t VAL;
+  68:src/sys/devices.h ****   uint32_t CALIB;
+  69:src/sys/devices.h **** };
+  70:src/sys/devices.h **** 
+  71:src/sys/devices.h **** /* PM §4.6 */ 
+  72:src/sys/devices.h **** struct FPU_registers {
+  73:src/sys/devices.h ****   __reserved(0x0);
+  74:src/sys/devices.h ****   uint32_t CCR;
+  75:src/sys/devices.h ****   uint32_t CAR;
+  76:src/sys/devices.h ****   uint32_t DSCR;
+  77:src/sys/devices.h **** };
+  78:src/sys/devices.h **** 
+  79:src/sys/devices.h **** 
+  80:src/sys/devices.h **** /* RM §3.6.7 */ 
+  81:src/sys/devices.h **** struct FLASH_registers {
+  82:src/sys/devices.h ****   uint32_t ACR;
+  83:src/sys/devices.h ****   uint32_t KEYR;
+  84:src/sys/devices.h ****   uint32_t OPTKEYR;
+  85:src/sys/devices.h ****   uint32_t SR;
+  86:src/sys/devices.h ****   uint32_t CR;
+  87:src/sys/devices.h ****   uint32_t OPTCR;  
+  88:src/sys/devices.h **** };
+  89:src/sys/devices.h **** 
+  90:src/sys/devices.h **** /* RM §4.4.4 */
+  91:src/sys/devices.h **** struct CRC_registers {
+  92:src/sys/devices.h ****   uint32_t DR;
+  93:src/sys/devices.h ****   uint32_t ICR;
+  94:src/sys/devices.h ****   uint32_t CR;
+  95:src/sys/devices.h **** };
+  96:src/sys/devices.h **** 
+  97:src/sys/devices.h **** /* RM §5.5 */
+  98:src/sys/devices.h **** struct PWR_registers {
+  99:src/sys/devices.h ****   uint32_t CR;
+ 100:src/sys/devices.h ****   uint32_t CSR;
+ 101:src/sys/devices.h **** };
+ 102:src/sys/devices.h **** 
+ 103:src/sys/devices.h **** /* RM §6.3.28 */
+ 104:src/sys/devices.h **** struct RCC_registers {
+ 105:src/sys/devices.h ****   uint32_t CR;
+ 106:src/sys/devices.h ****   uint32_t PLLCFGR;
+ 107:src/sys/devices.h ****   uint32_t CFGR;
+ 108:src/sys/devices.h ****   uint32_t CIR;
+ 109:src/sys/devices.h ****   uint32_t AHB1RSTR;
+ 110:src/sys/devices.h ****   uint32_t AHB2RSTR;
+ 111:src/sys/devices.h ****   uint32_t AHB3RSTR;
+ 112:src/sys/devices.h ****   __reserved(0x1c);
+ 113:src/sys/devices.h ****   uint32_t APB1RSTR;
+ 114:src/sys/devices.h ****   uint32_t APB2RSTR;
+ 115:src/sys/devices.h ****   __reserved(0x28);
+ 116:src/sys/devices.h ****   __reserved(0x2c);
+ 117:src/sys/devices.h ****   uint32_t AHB1ENR;
+ 118:src/sys/devices.h ****   uint32_t AHB2ENR;
+ 119:src/sys/devices.h ****   uint32_t AHB3ENR;
+ 120:src/sys/devices.h ****   __reserved(0x3c);
+ 121:src/sys/devices.h ****   uint32_t APB1ENR;
+ 122:src/sys/devices.h ****   uint32_t APB2ENR;
+ 123:src/sys/devices.h ****   __reserved(0x48);
+ 124:src/sys/devices.h ****   __reserved(0x4c);
+ 125:src/sys/devices.h ****   uint32_t AHB1LPENR;
+ 126:src/sys/devices.h ****   uint32_t AHB2LPENR;
+ 127:src/sys/devices.h ****   uint32_t AHB3LPENR;
+ 128:src/sys/devices.h ****   __reserved(0x5c);
+ 129:src/sys/devices.h ****   uint32_t APB1LPENR;
+ 130:src/sys/devices.h ****   uint32_t APB2LPENR;
+ 131:src/sys/devices.h ****   __reserved(0x68);
+ 132:src/sys/devices.h ****   __reserved(0x6c);
+ 133:src/sys/devices.h ****   uint32_t BDCR;
+ 134:src/sys/devices.h ****   uint32_t CSR;
+ 135:src/sys/devices.h ****   __reserved(0x78);
+ 136:src/sys/devices.h ****   __reserved(0x7c);
+ 137:src/sys/devices.h ****   uint32_t SSCGR;
+ 138:src/sys/devices.h ****   uint32_t PLLI2SCFGR;
+ 139:src/sys/devices.h ****   uint32_t PLLSAICFGR;
+ 140:src/sys/devices.h ****   uint32_t DCKCFGR;
+ 141:src/sys/devices.h ****   uint32_t CKGATENR;
+ 142:src/sys/devices.h ****   uint32_t DCKCFGR2;
+ 143:src/sys/devices.h **** };
+ 144:src/sys/devices.h **** 
+ 145:src/sys/devices.h **** /* RM §7.4.11 */
+ 146:src/sys/devices.h **** struct GPIO_registers {
+ 147:src/sys/devices.h ****   uint32_t MODER;
+ 148:src/sys/devices.h ****   uint32_t OTYPER;
+ 149:src/sys/devices.h ****   uint32_t OSPEEDR;
+ 150:src/sys/devices.h ****   uint32_t PUPDR;
+ 151:src/sys/devices.h ****   uint32_t IDR;
+ 152:src/sys/devices.h ****   uint32_t ODR;
+ 153:src/sys/devices.h ****   uint32_t BSRR;
+ 154:src/sys/devices.h ****   uint32_t LCKR;
+ 155:src/sys/devices.h ****   uint32_t AFRL;
+ 156:src/sys/devices.h ****   uint32_t AFRH;
+ 157:src/sys/devices.h **** };
+ 158:src/sys/devices.h **** 
+ 159:src/sys/devices.h **** /* RM §8.2.9 */
+ 160:src/sys/devices.h **** struct SYSCFG_registers {
+ 161:src/sys/devices.h ****   uint32_t MEMRMP;
+ 162:src/sys/devices.h ****   uint32_t PMC;
+ 163:src/sys/devices.h ****   uint32_t EXTICR1;
+ 164:src/sys/devices.h ****   uint32_t EXTICR2;
+ 165:src/sys/devices.h ****   uint32_t EXTICR3;
+ 166:src/sys/devices.h ****   uint32_t EXTICR4;
+ 167:src/sys/devices.h ****   __reserved(0x18);
+ 168:src/sys/devices.h ****   __reserved(0x1c);
+ 169:src/sys/devices.h ****   uint32_t CMPCR;
+ 170:src/sys/devices.h ****   __reserved(0x24);
+ 171:src/sys/devices.h ****   __reserved(0x28);
+ 172:src/sys/devices.h ****   uint32_t CFGR;
+ 173:src/sys/devices.h **** };
+ 174:src/sys/devices.h **** 
+ 175:src/sys/devices.h **** /* RM §9.5.11 */
+ 176:src/sys/devices.h **** struct DMA_Sx_registers {
+ 177:src/sys/devices.h ****   uint32_t CR;
+ 178:src/sys/devices.h ****   uint32_t NDTR;
+ 179:src/sys/devices.h ****   volatile void* PAR;
+ 180:src/sys/devices.h ****   volatile void* M0AR;
+ 181:src/sys/devices.h ****   volatile void* M1AR;
+ 182:src/sys/devices.h ****   uint32_t FCR;
+ 183:src/sys/devices.h **** };
+ 184:src/sys/devices.h **** struct DMA_registers {
+ 185:src/sys/devices.h ****   uint32_t LISR;
+ 186:src/sys/devices.h ****   uint32_t HISR;
+ 187:src/sys/devices.h ****   uint32_t LIFCR;
+ 188:src/sys/devices.h ****   uint32_t HIFCR;
+ 189:src/sys/devices.h ****   struct DMA_Sx_registers S[8];
+ 190:src/sys/devices.h **** };
+ 191:src/sys/devices.h **** 
+ 192:src/sys/devices.h **** /* RM §10.3.7 */
+ 193:src/sys/devices.h **** struct EXTI_registers {
+ 194:src/sys/devices.h ****   uint32_t IMR;
+ 195:src/sys/devices.h ****   uint32_t EMR;
+ 196:src/sys/devices.h ****   uint32_t RTSR;
+ 197:src/sys/devices.h ****   uint32_t FTSR;
+ 198:src/sys/devices.h ****   uint32_t SWIER;
+ 199:src/sys/devices.h ****   uint32_t PR;
+ 200:src/sys/devices.h **** };
+ 201:src/sys/devices.h **** 
+ 202:src/sys/devices.h **** /* RM §11.8 */
+ 203:src/sys/devices.h **** struct FMC_registers {
+ 204:src/sys/devices.h ****   uint32_t BCR1;
+ 205:src/sys/devices.h ****   uint32_t BCR2;
+ 206:src/sys/devices.h ****   uint32_t BCR3;
+ 207:src/sys/devices.h ****   uint32_t BCR4;
+ 208:src/sys/devices.h ****   uint32_t BTR1;
+ 209:src/sys/devices.h ****   uint32_t BTR2;
+ 210:src/sys/devices.h ****   uint32_t BTR3;
+ 211:src/sys/devices.h ****   uint32_t BTR4;
+ 212:src/sys/devices.h ****   uint32_t BWTR1;
+ 213:src/sys/devices.h ****   uint32_t BWTR2;
+ 214:src/sys/devices.h ****   uint32_t BWTR3;
+ 215:src/sys/devices.h ****   uint32_t BWTR4;
+ 216:src/sys/devices.h ****   uint32_t PCR;
+ 217:src/sys/devices.h ****   uint32_t SR;
+ 218:src/sys/devices.h ****   uint32_t PMEM;
+ 219:src/sys/devices.h ****   uint32_t PATT;
+ 220:src/sys/devices.h ****   uint32_t ECCR;
+ 221:src/sys/devices.h ****   uint32_t SDCR1;
+ 222:src/sys/devices.h ****   uint32_t SDCR2;
+ 223:src/sys/devices.h ****   uint32_t SDTR1;
+ 224:src/sys/devices.h ****   uint32_t SDTR2;
+ 225:src/sys/devices.h ****   uint32_t SDCMR;
+ 226:src/sys/devices.h ****   uint32_t SDRTR;
+ 227:src/sys/devices.h ****   uint32_t SDSR;
+ 228:src/sys/devices.h **** };
+ 229:src/sys/devices.h **** 
+ 230:src/sys/devices.h **** /* RM §12.5.14 */
+ 231:src/sys/devices.h **** struct QUADSPI_registers {
+ 232:src/sys/devices.h ****   uint32_t CR;
+ 233:src/sys/devices.h ****   uint32_t DCR;
+ 234:src/sys/devices.h ****   uint32_t SR;
+ 235:src/sys/devices.h ****   uint32_t FCR;
+ 236:src/sys/devices.h ****   uint32_t DLR;
+ 237:src/sys/devices.h ****   uint32_t CCR;
+ 238:src/sys/devices.h ****   uint32_t AR;
+ 239:src/sys/devices.h ****   uint32_t ABR;
+ 240:src/sys/devices.h ****   uint32_t DR;
+ 241:src/sys/devices.h ****   uint32_t PSMKR;
+ 242:src/sys/devices.h ****   uint32_t PSMAR;
+ 243:src/sys/devices.h ****   uint32_t PIR;
+ 244:src/sys/devices.h ****   uint32_t LPTR;
+ 245:src/sys/devices.h **** };
+ 246:src/sys/devices.h **** 
+ 247:src/sys/devices.h **** /* RM §13.13.18 */
+ 248:src/sys/devices.h **** struct ADCx_registers {
+ 249:src/sys/devices.h ****   uint32_t SR;
+ 250:src/sys/devices.h ****   uint32_t CR1;
+ 251:src/sys/devices.h ****   uint32_t CR2;
+ 252:src/sys/devices.h ****   uint32_t SMPR1;
+ 253:src/sys/devices.h ****   uint32_t SMPR2;
+ 254:src/sys/devices.h ****   uint32_t JOFR1;
+ 255:src/sys/devices.h ****   uint32_t JOFR2;
+ 256:src/sys/devices.h ****   uint32_t JOFR3;
+ 257:src/sys/devices.h ****   uint32_t JOFR4;
+ 258:src/sys/devices.h ****   uint32_t HTR;
+ 259:src/sys/devices.h ****   uint32_t LTR;
+ 260:src/sys/devices.h ****   uint32_t SQR1;
+ 261:src/sys/devices.h ****   uint32_t SQR2;
+ 262:src/sys/devices.h ****   uint32_t SQR3;
+ 263:src/sys/devices.h ****   uint32_t JSQR;
+ 264:src/sys/devices.h ****   uint32_t JDR1;
+ 265:src/sys/devices.h ****   uint32_t JDR2;
+ 266:src/sys/devices.h ****   uint32_t JDR3;
+ 267:src/sys/devices.h ****   uint32_t JDR4;
+ 268:src/sys/devices.h ****   uint32_t DR;
+ 269:src/sys/devices.h **** };
+ 270:src/sys/devices.h **** 
+ 271:src/sys/devices.h **** struct ADC_common_registers {
+ 272:src/sys/devices.h ****   uint32_t CSR;
+ 273:src/sys/devices.h ****   uint32_t CCR;
+ 274:src/sys/devices.h ****   uint32_t CDR;
+ 275:src/sys/devices.h **** };
+ 276:src/sys/devices.h **** 
+ 277:src/sys/devices.h **** 
+ 278:src/sys/devices.h **** /* RM §14.5.15 */
+ 279:src/sys/devices.h **** struct DAC_registers {
+ 280:src/sys/devices.h ****   uint32_t CR;
+ 281:src/sys/devices.h ****   uint32_t SWTRIGR;
+ 282:src/sys/devices.h ****   uint32_t DHR12R1;
+ 283:src/sys/devices.h ****   uint32_t DHR12L1;
+ 284:src/sys/devices.h ****   uint32_t DHR8R1;
+ 285:src/sys/devices.h ****   uint32_t DHR12R2;
+ 286:src/sys/devices.h ****   uint32_t DHR12L2;
+ 287:src/sys/devices.h ****   uint32_t DHR8R2;
+ 288:src/sys/devices.h ****   uint32_t DHR12RD;
+ 289:src/sys/devices.h ****   uint32_t DHR12LD;
+ 290:src/sys/devices.h ****   uint32_t DHR8RD;
+ 291:src/sys/devices.h ****   uint32_t DOR1;
+ 292:src/sys/devices.h ****   uint32_t DOR2;
+ 293:src/sys/devices.h ****   uint32_t SR;
+ 294:src/sys/devices.h **** };
+ 295:src/sys/devices.h **** 
+ 296:src/sys/devices.h **** /* RM §15.8.12 */
+ 297:src/sys/devices.h **** struct DCMI_registers {
+ 298:src/sys/devices.h ****   uint32_t CR;
+ 299:src/sys/devices.h ****   uint32_t SR;
+ 300:src/sys/devices.h ****   uint32_t RIS;
+ 301:src/sys/devices.h ****   uint32_t IER;
+ 302:src/sys/devices.h ****   uint32_t MIS;
+ 303:src/sys/devices.h ****   uint32_t ICR;
+ 304:src/sys/devices.h ****   uint32_t ESCR;
+ 305:src/sys/devices.h ****   uint32_t ESUR;
+ 306:src/sys/devices.h ****   uint32_t CWSTRT;
+ 307:src/sys/devices.h ****   uint32_t CWSIZE;
+ 308:src/sys/devices.h ****   uint32_t DR;
+ 309:src/sys/devices.h **** };
+ 310:src/sys/devices.h **** 
+ 311:src/sys/devices.h **** /* RM §16.4.21 TIM1,8 */
+ 312:src/sys/devices.h **** /* RM §17.4.21 TIM2,3,4,5 */
+ 313:src/sys/devices.h **** /* RM §18.4.13 TIM9,12 */
+ 314:src/sys/devices.h **** /* RM §18.5.1  TIM10,11,13,14 */
+ 315:src/sys/devices.h **** /* RM §19.4.9  TIM6,7 */
+ 316:src/sys/devices.h **** struct TIMx_registers {
+ 317:src/sys/devices.h ****   uint32_t CR1;
+ 318:src/sys/devices.h ****   uint32_t CR2;
+ 319:src/sys/devices.h ****   uint32_t SMCR;
+ 320:src/sys/devices.h ****   uint32_t DIER;
+ 321:src/sys/devices.h ****   uint32_t SR;
+ 322:src/sys/devices.h ****   uint32_t EGR;
+ 323:src/sys/devices.h ****   uint32_t CCMR1;
+ 324:src/sys/devices.h ****   uint32_t CCMR2;
+ 325:src/sys/devices.h ****   uint32_t CCER;
+ 326:src/sys/devices.h ****   uint32_t CNT;
+ 327:src/sys/devices.h ****   uint32_t PSC;
+ 328:src/sys/devices.h ****   uint32_t ARR;
+ 329:src/sys/devices.h ****   uint32_t RCR;
+ 330:src/sys/devices.h ****   uint32_t CCR1;
+ 331:src/sys/devices.h ****   uint32_t CCR2;
+ 332:src/sys/devices.h ****   uint32_t CCR3;
+ 333:src/sys/devices.h ****   uint32_t CCR4;
+ 334:src/sys/devices.h ****   uint32_t BDTR;
+ 335:src/sys/devices.h ****   uint32_t DCR;
+ 336:src/sys/devices.h ****   uint32_t DMAR;
+ 337:src/sys/devices.h ****   uint32_t OR;
+ 338:src/sys/devices.h **** };
+ 339:src/sys/devices.h **** 
+ 340:src/sys/devices.h **** /* RM §20.4.5 */
+ 341:src/sys/devices.h **** struct IWDG_registers {
+ 342:src/sys/devices.h ****   uint32_t KR;
+ 343:src/sys/devices.h ****   uint32_t PR;
+ 344:src/sys/devices.h ****   uint32_t RLR;
+ 345:src/sys/devices.h ****   uint32_t SR;
+ 346:src/sys/devices.h **** };
+ 347:src/sys/devices.h **** 
+ 348:src/sys/devices.h **** /* RM §21.6.4 */
+ 349:src/sys/devices.h **** struct WWDG_registers {
+ 350:src/sys/devices.h ****   uint32_t CR;
+ 351:src/sys/devices.h ****   uint32_t CFR;
+ 352:src/sys/devices.h ****   uint32_t SR;
+ 353:src/sys/devices.h **** };
+ 354:src/sys/devices.h **** 
+ 355:src/sys/devices.h **** /* RM §22.6.21 */
+ 356:src/sys/devices.h **** struct RTC_registers {
+ 357:src/sys/devices.h ****   uint32_t TR;
+ 358:src/sys/devices.h ****   uint32_t DR;
+ 359:src/sys/devices.h ****   uint32_t CR;
+ 360:src/sys/devices.h ****   uint32_t ISR;
+ 361:src/sys/devices.h ****   uint32_t PRER;
+ 362:src/sys/devices.h ****   uint32_t WUTR;
+ 363:src/sys/devices.h ****   uint32_t CALIBR;
+ 364:src/sys/devices.h ****   uint32_t ALRMAR;
+ 365:src/sys/devices.h ****   uint32_t ALRMBR;
+ 366:src/sys/devices.h ****   uint32_t WPR;
+ 367:src/sys/devices.h ****   uint32_t SSR;
+ 368:src/sys/devices.h ****   uint32_t SHIFTR;
+ 369:src/sys/devices.h ****   uint32_t TSTR;
+ 370:src/sys/devices.h ****   uint32_t TSSSR;
+ 371:src/sys/devices.h ****   uint32_t CALR;
+ 372:src/sys/devices.h ****   uint32_t TAFCR;
+ 373:src/sys/devices.h ****   uint32_t ALRMASSR;
+ 374:src/sys/devices.h ****   uint32_t ALRMBSSR;
+ 375:src/sys/devices.h ****   uint32_t BKPR[20];
+ 376:src/sys/devices.h **** };
+ 377:src/sys/devices.h **** 
+ 378:src/sys/devices.h **** /* RM §23.7.12 */
+ 379:src/sys/devices.h **** struct FMPI2C_registers {
+ 380:src/sys/devices.h ****   uint32_t CR1;
+ 381:src/sys/devices.h ****   uint32_t CR2;
+ 382:src/sys/devices.h ****   uint32_t OAR1;
+ 383:src/sys/devices.h ****   uint32_t OAR2;
+ 384:src/sys/devices.h ****   uint32_t TIMINGR;
+ 385:src/sys/devices.h ****   uint32_t TIMEOUTR;
+ 386:src/sys/devices.h ****   uint32_t ISR;
+ 387:src/sys/devices.h ****   uint32_t ICR;
+ 388:src/sys/devices.h ****   uint32_t PECR;
+ 389:src/sys/devices.h ****   uint32_t RXDR;
+ 390:src/sys/devices.h ****   uint32_t TXDR;
+ 391:src/sys/devices.h **** };
+ 392:src/sys/devices.h **** 
+ 393:src/sys/devices.h **** /* RM §24.6.14 */
+ 394:src/sys/devices.h **** struct I2C_registers {
+ 395:src/sys/devices.h ****   uint32_t CR1;
+ 396:src/sys/devices.h ****   uint32_t CR2;
+ 397:src/sys/devices.h ****   uint32_t OAR1;
+ 398:src/sys/devices.h ****   uint32_t OAR2;
+ 399:src/sys/devices.h ****   uint32_t DR;
+ 400:src/sys/devices.h ****   uint32_t SR1;
+ 401:src/sys/devices.h ****   uint32_t SR2;
+ 402:src/sys/devices.h ****   uint32_t CCR;
+ 403:src/sys/devices.h ****   uint32_t TRISE;
+ 404:src/sys/devices.h ****   uint32_t FLTR;
+ 405:src/sys/devices.h **** };
+ 406:src/sys/devices.h **** 
+ 407:src/sys/devices.h **** /* RM §25.6.8 */
+ 408:src/sys/devices.h **** struct USART_registers {
+ 409:src/sys/devices.h ****   uint32_t SR;
+ 410:src/sys/devices.h ****   uint32_t DR;
+ 411:src/sys/devices.h ****   uint32_t BRR;
+ 412:src/sys/devices.h ****   uint32_t CR1;
+ 413:src/sys/devices.h ****   uint32_t CR2;
+ 414:src/sys/devices.h ****   uint32_t CR3;
+ 415:src/sys/devices.h ****   uint32_t GTPR;
+ 416:src/sys/devices.h **** };
+ 417:src/sys/devices.h **** 
+ 418:src/sys/devices.h **** /* RM §26.7.10 */
+ 419:src/sys/devices.h **** struct SPI_I2S_registers {
+ 420:src/sys/devices.h ****   uint32_t CR1;
+ 421:src/sys/devices.h ****   uint32_t CR2;
+ 422:src/sys/devices.h ****   uint32_t SR;
+ 423:src/sys/devices.h ****   uint32_t DR;
+ 424:src/sys/devices.h ****   uint32_t CRCPR;
+ 425:src/sys/devices.h ****   uint32_t RXCRCR;
+ 426:src/sys/devices.h ****   uint32_t TXCRCR;
+ 427:src/sys/devices.h ****   uint32_t I2SCFGR;
+ 428:src/sys/devices.h ****   uint32_t I2SPR;
+ 429:src/sys/devices.h **** };
+ 430:src/sys/devices.h **** 
+ 431:src/sys/devices.h **** /* RM §27.5.10 */
+ 432:src/sys/devices.h **** struct SPDIFRX_registers {
+ 433:src/sys/devices.h ****   uint32_t CR;
+ 434:src/sys/devices.h ****   uint32_t IMR;
+ 435:src/sys/devices.h ****   uint32_t SR;
+ 436:src/sys/devices.h ****   uint32_t IFCR;
+ 437:src/sys/devices.h ****   uint32_t DR;
+ 438:src/sys/devices.h ****   uint32_t CSR;
+ 439:src/sys/devices.h ****   uint32_t DIR;
+ 440:src/sys/devices.h **** };
+ 441:src/sys/devices.h **** 
+ 442:src/sys/devices.h **** /* RM §28.5.10 */
+ 443:src/sys/devices.h **** struct SAI_x_registers {
+ 444:src/sys/devices.h ****   uint32_t CR1;
+ 445:src/sys/devices.h ****   uint32_t CR2;
+ 446:src/sys/devices.h ****   uint32_t FRCR;
+ 447:src/sys/devices.h ****   uint32_t SLOTR;
+ 448:src/sys/devices.h ****   uint32_t IM;
+ 449:src/sys/devices.h ****   uint32_t SR;
+ 450:src/sys/devices.h ****   uint32_t CLRFR;
+ 451:src/sys/devices.h ****   uint32_t DR;
+ 452:src/sys/devices.h **** };
+ 453:src/sys/devices.h **** 
+ 454:src/sys/devices.h **** struct SAI_registers {
+ 455:src/sys/devices.h ****   uint32_t GCR;
+ 456:src/sys/devices.h ****   struct SAI_x_registers A;
+ 457:src/sys/devices.h ****   struct SAI_x_registers B;
+ 458:src/sys/devices.h **** };
+ 459:src/sys/devices.h **** 
+ 460:src/sys/devices.h **** /* RM §29.8.16 */
+ 461:src/sys/devices.h **** struct SDIO_registers {
+ 462:src/sys/devices.h ****   uint32_t POWER;
+ 463:src/sys/devices.h ****   uint32_t CLKCR;
+ 464:src/sys/devices.h ****   uint32_t CMD;
+ 465:src/sys/devices.h ****   uint32_t RESPCMD;
+ 466:src/sys/devices.h ****   uint32_t RESP1;
+ 467:src/sys/devices.h ****   uint32_t RESP2;
+ 468:src/sys/devices.h ****   uint32_t RESP3;
+ 469:src/sys/devices.h ****   uint32_t RESP4;
+ 470:src/sys/devices.h ****   uint32_t DTIMER;
+ 471:src/sys/devices.h ****   uint32_t DLEN;
+ 472:src/sys/devices.h ****   uint32_t DCTRL;
+ 473:src/sys/devices.h ****   uint32_t DCOUNT;
+ 474:src/sys/devices.h ****   uint32_t STA;
+ 475:src/sys/devices.h ****   uint32_t ICR;
+ 476:src/sys/devices.h ****   uint32_t MASK;
+ 477:src/sys/devices.h ****   __reserved(0x40);
+ 478:src/sys/devices.h ****   __reserved(0x44);
+ 479:src/sys/devices.h ****   uint32_t FIFOCNT;
+ 480:src/sys/devices.h ****   __reserved_interval(0x4c,0x80);
+ 481:src/sys/devices.h ****   uint32_t FIFO[32];
+ 482:src/sys/devices.h **** };
+ 483:src/sys/devices.h ****   
+ 484:src/sys/devices.h **** /* RM §30.9.5 */
+ 485:src/sys/devices.h **** struct bxCAN_TxRx_registers {
+ 486:src/sys/devices.h ****   uint32_t IR;
+ 487:src/sys/devices.h ****   uint32_t DTR;
+ 488:src/sys/devices.h ****   uint32_t DLR;
+ 489:src/sys/devices.h ****   uint32_t DHR;
+ 490:src/sys/devices.h **** };
+ 491:src/sys/devices.h **** 
+ 492:src/sys/devices.h **** struct bxCAN_registers {
+ 493:src/sys/devices.h ****   uint32_t MCR;
+ 494:src/sys/devices.h ****   uint32_t MSR;
+ 495:src/sys/devices.h ****   uint32_t TSR;
+ 496:src/sys/devices.h ****   uint32_t RF0R;
+ 497:src/sys/devices.h ****   uint32_t RF1R;
+ 498:src/sys/devices.h ****   uint32_t IER;
+ 499:src/sys/devices.h ****   uint32_t ESR;
+ 500:src/sys/devices.h ****   uint32_t BTR;
+ 501:src/sys/devices.h ****   __reserved_interval(0x20,0x180);
+ 502:src/sys/devices.h ****   struct bxCAN_TxRx_registers Tx[3];
+ 503:src/sys/devices.h ****   struct bxCAN_TxRx_registers Rx[2];
+ 504:src/sys/devices.h ****   __reserved_interval(0x1d0,0x200);
+ 505:src/sys/devices.h ****   uint32_t FMR;
+ 506:src/sys/devices.h ****   uint32_t FM1R;
+ 507:src/sys/devices.h ****   __reserved(0x208);
+ 508:src/sys/devices.h ****   uint32_t FS1R;
+ 509:src/sys/devices.h ****   __reserved(0x210);
+ 510:src/sys/devices.h ****   uint32_t FFA1R;
+ 511:src/sys/devices.h ****   __reserved(0x218);
+ 512:src/sys/devices.h ****   uint32_t FA1R;
+ 513:src/sys/devices.h ****   __reserved_interval(0x220,0x240);
+ 514:src/sys/devices.h ****   struct {uint32_t R1; uint32_t R2;} F[28];
+ 515:src/sys/devices.h **** };
+ 516:src/sys/devices.h **** 
+ 517:src/sys/devices.h **** /* RM §32.7.7 */
+ 518:src/sys/devices.h **** struct OTG_registers {
+ 519:src/sys/devices.h ****    /* TODO */
+ 520:src/sys/devices.h **** };
+ 521:src/sys/devices.h **** 
+ 522:src/sys/devices.h **** /* RM §32.7.7 */
+ 523:src/sys/devices.h **** struct HDMI_CEC_registers {
+ 524:src/sys/devices.h ****   uint32_t CR;
+ 525:src/sys/devices.h ****   uint32_t CFGR;
+ 526:src/sys/devices.h ****   uint32_t TXDR;
+ 527:src/sys/devices.h ****   uint32_t RXDR;
+ 528:src/sys/devices.h ****   uint32_t ISR;
+ 529:src/sys/devices.h ****   uint32_t IER;
+ 530:src/sys/devices.h **** };
+ 531:src/sys/devices.h **** 
+ 532:src/sys/devices.h **** /* RM §33.18 */
+ 533:src/sys/devices.h **** struct DBGMCU_registers {
+ 534:src/sys/devices.h ****   uint32_t IDCODE;
+ 535:src/sys/devices.h ****   uint32_t CR;
+ 536:src/sys/devices.h ****   uint32_t APB1FZ;
+ 537:src/sys/devices.h ****   uint32_t APB2FZ;
+ 538:src/sys/devices.h **** };
+ 539:src/sys/devices.h **** 
+ 540:src/sys/devices.h **** /* Constant values */
+ 541:src/sys/devices.h **** 
+ 542:src/sys/devices.h **** extern const uint16_t Package_data;
+ 543:src/sys/devices.h **** extern const uint16_t TS_CAL2;
+ 544:src/sys/devices.h **** extern const uint16_t TS_CAL1;
+ 545:src/sys/devices.h **** extern const uint16_t VREFIN_CAL;
+ 546:src/sys/devices.h **** extern const uint16_t Flash_size;
+ 547:src/sys/devices.h **** extern const uint32_t U_ID[3];
+ 548:src/sys/devices.h **** 
+ 549:src/sys/devices.h **** /* Core Devices base addresses */
+ 550:src/sys/devices.h **** 
+ 551:src/sys/devices.h **** extern volatile struct DBGMCU_registers DBG;
+ 552:src/sys/devices.h **** 
+ 553:src/sys/devices.h **** extern volatile struct FPU_registers FPU;
+ 554:src/sys/devices.h **** extern volatile uint32_t NVIC_STIR;
+ 555:src/sys/devices.h **** extern volatile struct MPU_registers MPU;
+ 556:src/sys/devices.h **** extern volatile uint32_t FPU_CPACR;
+ 557:src/sys/devices.h **** extern volatile struct SCB_registers SCB;
+ 558:src/sys/devices.h **** extern volatile struct NVIC_registers NVIC;
+ 559:src/sys/devices.h **** extern volatile struct STK_registers SysTick;
+ 560:src/sys/devices.h **** 
+ 561:src/sys/devices.h **** /* Devices base addresses */
+ 562:src/sys/devices.h **** 
+ 563:src/sys/devices.h **** extern volatile struct QUADSPI_registers QUADSPI;
+ 564:src/sys/devices.h **** 
+ 565:src/sys/devices.h **** extern volatile struct DCMI_registers DCMI;
+ 566:src/sys/devices.h **** extern volatile struct OTG_registers USB_OTG_FS;
+ 567:src/sys/devices.h **** 
+ 568:src/sys/devices.h **** extern volatile struct OTG_registers USB_OTG_HS;
+ 569:src/sys/devices.h **** extern volatile struct DMA_registers DMA2;
+ 570:src/sys/devices.h **** extern volatile struct DMA_registers DMA1;
+ 571:src/sys/devices.h **** extern uint32_t BKPSRAM[1024];
+ 572:src/sys/devices.h **** extern volatile struct FLASH_registers FLASH;
+ 573:src/sys/devices.h **** extern volatile struct RCC_registers RCC;
+ 574:src/sys/devices.h **** extern volatile struct CRC_registers CRC;
+ 575:src/sys/devices.h **** extern volatile struct GPIO_registers GPIOH;
+ 576:src/sys/devices.h **** extern volatile struct GPIO_registers GPIOG;
+ 577:src/sys/devices.h **** extern volatile struct GPIO_registers GPIOF;
+ 578:src/sys/devices.h **** extern volatile struct GPIO_registers GPIOE;
+ 579:src/sys/devices.h **** extern volatile struct GPIO_registers GPIOD;
+ 580:src/sys/devices.h **** extern volatile struct GPIO_registers GPIOC;
+ 581:src/sys/devices.h **** extern volatile struct GPIO_registers GPIOB;
+ 582:src/sys/devices.h **** extern volatile struct GPIO_registers GPIOA;
+ 583:src/sys/devices.h **** 
+ 584:src/sys/devices.h **** extern volatile struct SAI_registers SAI2;
+ 585:src/sys/devices.h **** extern volatile struct SAI_registers SAI1;
+ 586:src/sys/devices.h **** 
+ 587:src/sys/devices.h **** extern volatile struct TIMx_registers TIM11;
+ 588:src/sys/devices.h **** extern volatile struct TIMx_registers TIM10;
+ 589:src/sys/devices.h **** extern volatile struct TIMx_registers TIM9;
+ 590:src/sys/devices.h **** extern volatile struct EXTI_registers EXTI;
+ 591:src/sys/devices.h **** extern volatile struct SYSCFG_registers SYSCFG;
+ 592:src/sys/devices.h **** extern volatile struct SPI_registers SPI4;
+ 593:src/sys/devices.h **** extern volatile struct SPI_registers SPI1;
+ 594:src/sys/devices.h **** extern volatile struct SDIO_registers SDMMC;
+ 595:src/sys/devices.h **** extern volatile struct ADCx_registers ADC1;
+ 596:src/sys/devices.h **** extern volatile struct ADCx_registers ADC2;
+ 597:src/sys/devices.h **** extern volatile struct ADCx_registers ADC3;
+ 598:src/sys/devices.h **** extern volatile struct ADC_common_registers ADC_common;
+ 599:src/sys/devices.h **** extern volatile struct USART_registers USART6;
+ 600:src/sys/devices.h **** extern volatile struct USART_registers USART1;
+ 601:src/sys/devices.h **** extern volatile struct TIMx_registers TIM8;
+ 602:src/sys/devices.h **** extern volatile struct TIMx_registers TIM1;
+ 603:src/sys/devices.h **** 
+ 604:src/sys/devices.h **** extern volatile struct DAC_registers DAC;
+ 605:src/sys/devices.h **** extern volatile struct PWR_registers PWR;
+ 606:src/sys/devices.h **** extern volatile struct HDMI_CEC_registers HDMI_CEC;
+ 607:src/sys/devices.h **** extern volatile struct bxCAN_registers CAN2;
+ 608:src/sys/devices.h **** extern volatile struct bxCAN_registers CAN1;
+ 609:src/sys/devices.h **** extern volatile struct FMPI2C_registers FMPI2C1;
+ 610:src/sys/devices.h **** extern volatile struct I2C_registers I2C3;
+ 611:src/sys/devices.h **** extern volatile struct I2C_registers I2C2;
+ 612:src/sys/devices.h **** extern volatile struct I2C_registers I2C1;
+ 613:src/sys/devices.h **** extern volatile struct USART_registers UART5;
+ 614:src/sys/devices.h **** extern volatile struct USART_registers UART4;
+ 615:src/sys/devices.h **** extern volatile struct USART_registers USART3;
+ 616:src/sys/devices.h **** extern volatile struct USART_registers USART2;
+ 617:src/sys/devices.h **** extern volatile struct SPDIF_RX_registers SPDIF_RX;
+ 618:src/sys/devices.h **** extern volatile struct SPI_I2S_registers SPI3_I2S3;
+ 619:src/sys/devices.h **** extern volatile struct SPI_I2S_registers SPI2_I2S2;
+ 620:src/sys/devices.h **** extern volatile struct IWDG_registers IWDG;
+ 621:src/sys/devices.h **** extern volatile struct WWDG_registers WWDG;
+ 622:src/sys/devices.h **** extern volatile struct RTC_registers RTC_BKP;
+ 623:src/sys/devices.h **** extern volatile struct TIMx_registers TIM14;
+ 624:src/sys/devices.h **** extern volatile struct TIMx_registers TIM13;
+ 625:src/sys/devices.h **** extern volatile struct TIMx_registers TIM12;
+ 626:src/sys/devices.h **** extern volatile struct TIMx_registers TIM7;
+ 627:src/sys/devices.h **** extern volatile struct TIMx_registers TIM6;
+ 628:src/sys/devices.h **** extern volatile struct TIMx_registers TIM5;
+ 629:src/sys/devices.h **** extern volatile struct TIMx_registers TIM4;
+ 630:src/sys/devices.h **** extern volatile struct TIMx_registers TIM3;
+ 631:src/sys/devices.h **** extern volatile struct TIMx_registers TIM2;
+ 632:src/sys/devices.h **** 
+ 633:src/sys/devices.h **** #define __set_bit(_w,_i) ((_w)|=(1<<(_i)))
+ 634:src/sys/devices.h **** #define __clr_bit(_w,_i) ((_w) &= ~(1<<(_i)))
+ 635:src/sys/devices.h **** #define __really_inline__ static inline __attribute__((always_inline)) 
+ 636:src/sys/devices.h **** #define __sync __DSB
+ 637:src/sys/devices.h **** 
+ 638:src/sys/devices.h **** #define __declare_device_control(name,bus,bus_bit) \
+ 639:src/sys/devices.h ****   void __really_inline__ enable_##name() { \
+ 640:src/sys/devices.h ****     __set_bit(RCC.bus##ENR,bus_bit); __sync(); } \
+ 641:src/sys/devices.h ****   void __really_inline__ low_power_enable_##name() { \
+ 642:src/sys/devices.h ****     __set_bit(RCC.bus##LPENR,bus_bit); __sync(); } \
+ 643:src/sys/devices.h ****   void __really_inline__ disable_##name() { \
+ 644:src/sys/devices.h ****     __clr_bit(RCC.bus##ENR,bus_bit); __sync(); } \
+ 645:src/sys/devices.h ****   void __really_inline__ low_power_disable_## name() { \
+ 646:src/sys/devices.h ****     __clr_bit(RCC.bus##LPENR,bus_bit); __sync(); } \
+ 647:src/sys/devices.h ****   void __really_inline__ reset_##name() { \
+ 648:src/sys/devices.h ****     __set_bit(RCC.bus##RSTR,bus_bit); __sync(); } \
+ 649:src/sys/devices.h **** \
+ 650:src/sys/devices.h **** 
+ 651:src/sys/devices.h **** /* __declare_device_control(FMC,AHB3,0) FMC not available in LQFP64 package */
+ 652:src/sys/devices.h **** __declare_device_control(QUADSPI,AHB3,1)
+ 653:src/sys/devices.h **** 
+ 654:src/sys/devices.h **** __declare_device_control(DCMI,AHB2,0)
+ 655:src/sys/devices.h **** __declare_device_control(USB_OTG_FS,AHB2,7)
+ 656:src/sys/devices.h **** 
+ 657:src/sys/devices.h **** __declare_device_control(USB_OTG_HS,AHB1,29)
+ 658:src/sys/devices.h **** __declare_device_control(DMA2,AHB1,22)
+ 659:src/sys/devices.h **** __declare_device_control(DMA1,AHB1,21)
+ 660:src/sys/devices.h **** __declare_device_control(CRC,AHB1,12)
+ 661:src/sys/devices.h **** __declare_device_control(GPIOH,AHB1,7)
+ 662:src/sys/devices.h **** __declare_device_control(GPIOG,AHB1,6)
+ 663:src/sys/devices.h **** __declare_device_control(GPIOF,AHB1,5)
+ 664:src/sys/devices.h **** __declare_device_control(GPIOE,AHB1,4)
+ 665:src/sys/devices.h **** __declare_device_control(GPIOD,AHB1,3)
+ 666:src/sys/devices.h **** __declare_device_control(GPIOC,AHB1,2)
+ 667:src/sys/devices.h **** __declare_device_control(GPIOB,AHB1,1)
+ 668:src/sys/devices.h **** __declare_device_control(GPIOA,AHB1,0)
+  37              		.loc 2 668 0
+  38 0000 0E4A     		ldr	r2, .L2
+  39 0002 136B     		ldr	r3, [r2, #48]
+  40 0004 43F00103 		orr	r3, r3, #1
+  41 0008 1363     		str	r3, [r2, #48]
+  42              	.LBB10:
+  43              	.LBB11:
+  44              		.file 3 "src/sys/cmsis_gcc.h"
+   1:src/sys/cmsis_gcc.h **** /**************************************************************************//**
+   2:src/sys/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:src/sys/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:src/sys/cmsis_gcc.h ****  * @version  V4.30
+   5:src/sys/cmsis_gcc.h ****  * @date     20. October 2015
+   6:src/sys/cmsis_gcc.h ****  ******************************************************************************/
+   7:src/sys/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:src/sys/cmsis_gcc.h **** 
+   9:src/sys/cmsis_gcc.h ****    All rights reserved.
+  10:src/sys/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:src/sys/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:src/sys/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:src/sys/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:src/sys/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:src/sys/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:src/sys/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:src/sys/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:src/sys/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:src/sys/cmsis_gcc.h ****      specific prior written permission.
+  20:src/sys/cmsis_gcc.h ****    *
+  21:src/sys/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:src/sys/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:src/sys/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:src/sys/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:src/sys/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:src/sys/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:src/sys/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:src/sys/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:src/sys/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:src/sys/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:src/sys/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:src/sys/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:src/sys/cmsis_gcc.h **** 
+  34:src/sys/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  35:src/sys/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  36:src/sys/cmsis_gcc.h **** 
+  37:src/sys/cmsis_gcc.h **** /* ignore some GCC warnings */
+  38:src/sys/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  39:src/sys/cmsis_gcc.h **** #pragma GCC diagnostic push
+  40:src/sys/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  41:src/sys/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  42:src/sys/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  43:src/sys/cmsis_gcc.h **** #endif
+  44:src/sys/cmsis_gcc.h **** 
+  45:src/sys/cmsis_gcc.h **** 
+  46:src/sys/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  47:src/sys/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  48:src/sys/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  49:src/sys/cmsis_gcc.h ****   @{
+  50:src/sys/cmsis_gcc.h ****  */
+  51:src/sys/cmsis_gcc.h **** 
+  52:src/sys/cmsis_gcc.h **** /**
+  53:src/sys/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  54:src/sys/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  55:src/sys/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  56:src/sys/cmsis_gcc.h ****  */
+  57:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  58:src/sys/cmsis_gcc.h **** {
+  59:src/sys/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  60:src/sys/cmsis_gcc.h **** }
+  61:src/sys/cmsis_gcc.h **** 
+  62:src/sys/cmsis_gcc.h **** 
+  63:src/sys/cmsis_gcc.h **** /**
+  64:src/sys/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  65:src/sys/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  66:src/sys/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  67:src/sys/cmsis_gcc.h ****  */
+  68:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  69:src/sys/cmsis_gcc.h **** {
+  70:src/sys/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+  71:src/sys/cmsis_gcc.h **** }
+  72:src/sys/cmsis_gcc.h **** 
+  73:src/sys/cmsis_gcc.h **** 
+  74:src/sys/cmsis_gcc.h **** /**
+  75:src/sys/cmsis_gcc.h ****   \brief   Get Control Register
+  76:src/sys/cmsis_gcc.h ****   \details Returns the content of the Control Register.
+  77:src/sys/cmsis_gcc.h ****   \return               Control Register value
+  78:src/sys/cmsis_gcc.h ****  */
+  79:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_CONTROL(void)
+  80:src/sys/cmsis_gcc.h **** {
+  81:src/sys/cmsis_gcc.h ****   uint32_t result;
+  82:src/sys/cmsis_gcc.h **** 
+  83:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, control" : "=r" (result) );
+  84:src/sys/cmsis_gcc.h ****   return(result);
+  85:src/sys/cmsis_gcc.h **** }
+  86:src/sys/cmsis_gcc.h **** 
+  87:src/sys/cmsis_gcc.h **** 
+  88:src/sys/cmsis_gcc.h **** /**
+  89:src/sys/cmsis_gcc.h ****   \brief   Set Control Register
+  90:src/sys/cmsis_gcc.h ****   \details Writes the given value to the Control Register.
+  91:src/sys/cmsis_gcc.h ****   \param [in]    control  Control Register value to set
+  92:src/sys/cmsis_gcc.h ****  */
+  93:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_CONTROL(uint32_t control)
+  94:src/sys/cmsis_gcc.h **** {
+  95:src/sys/cmsis_gcc.h ****   __ASM volatile ("MSR control, %0" : : "r" (control) : "memory");
+  96:src/sys/cmsis_gcc.h **** }
+  97:src/sys/cmsis_gcc.h **** 
+  98:src/sys/cmsis_gcc.h **** 
+  99:src/sys/cmsis_gcc.h **** /**
+ 100:src/sys/cmsis_gcc.h ****   \brief   Get IPSR Register
+ 101:src/sys/cmsis_gcc.h ****   \details Returns the content of the IPSR Register.
+ 102:src/sys/cmsis_gcc.h ****   \return               IPSR Register value
+ 103:src/sys/cmsis_gcc.h ****  */
+ 104:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_IPSR(void)
+ 105:src/sys/cmsis_gcc.h **** {
+ 106:src/sys/cmsis_gcc.h ****   uint32_t result;
+ 107:src/sys/cmsis_gcc.h **** 
+ 108:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, ipsr" : "=r" (result) );
+ 109:src/sys/cmsis_gcc.h ****   return(result);
+ 110:src/sys/cmsis_gcc.h **** }
+ 111:src/sys/cmsis_gcc.h **** 
+ 112:src/sys/cmsis_gcc.h **** 
+ 113:src/sys/cmsis_gcc.h **** /**
+ 114:src/sys/cmsis_gcc.h ****   \brief   Get APSR Register
+ 115:src/sys/cmsis_gcc.h ****   \details Returns the content of the APSR Register.
+ 116:src/sys/cmsis_gcc.h ****   \return               APSR Register value
+ 117:src/sys/cmsis_gcc.h ****  */
+ 118:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_APSR(void)
+ 119:src/sys/cmsis_gcc.h **** {
+ 120:src/sys/cmsis_gcc.h ****   uint32_t result;
+ 121:src/sys/cmsis_gcc.h **** 
+ 122:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, apsr" : "=r" (result) );
+ 123:src/sys/cmsis_gcc.h ****   return(result);
+ 124:src/sys/cmsis_gcc.h **** }
+ 125:src/sys/cmsis_gcc.h **** 
+ 126:src/sys/cmsis_gcc.h **** 
+ 127:src/sys/cmsis_gcc.h **** /**
+ 128:src/sys/cmsis_gcc.h ****   \brief   Get xPSR Register
+ 129:src/sys/cmsis_gcc.h ****   \details Returns the content of the xPSR Register.
+ 130:src/sys/cmsis_gcc.h **** 
+ 131:src/sys/cmsis_gcc.h ****     \return               xPSR Register value
+ 132:src/sys/cmsis_gcc.h ****  */
+ 133:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_xPSR(void)
+ 134:src/sys/cmsis_gcc.h **** {
+ 135:src/sys/cmsis_gcc.h ****   uint32_t result;
+ 136:src/sys/cmsis_gcc.h **** 
+ 137:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, xpsr" : "=r" (result) );
+ 138:src/sys/cmsis_gcc.h ****   return(result);
+ 139:src/sys/cmsis_gcc.h **** }
+ 140:src/sys/cmsis_gcc.h **** 
+ 141:src/sys/cmsis_gcc.h **** 
+ 142:src/sys/cmsis_gcc.h **** /**
+ 143:src/sys/cmsis_gcc.h ****   \brief   Get Process Stack Pointer
+ 144:src/sys/cmsis_gcc.h ****   \details Returns the current value of the Process Stack Pointer (PSP).
+ 145:src/sys/cmsis_gcc.h ****   \return               PSP Register value
+ 146:src/sys/cmsis_gcc.h ****  */
+ 147:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PSP(void)
+ 148:src/sys/cmsis_gcc.h **** {
+ 149:src/sys/cmsis_gcc.h ****   register uint32_t result;
+ 150:src/sys/cmsis_gcc.h **** 
+ 151:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, psp\n"  : "=r" (result) );
+ 152:src/sys/cmsis_gcc.h ****   return(result);
+ 153:src/sys/cmsis_gcc.h **** }
+ 154:src/sys/cmsis_gcc.h **** 
+ 155:src/sys/cmsis_gcc.h **** 
+ 156:src/sys/cmsis_gcc.h **** /**
+ 157:src/sys/cmsis_gcc.h ****   \brief   Set Process Stack Pointer
+ 158:src/sys/cmsis_gcc.h ****   \details Assigns the given value to the Process Stack Pointer (PSP).
+ 159:src/sys/cmsis_gcc.h ****   \param [in]    topOfProcStack  Process Stack Pointer value to set
+ 160:src/sys/cmsis_gcc.h ****  */
+ 161:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PSP(uint32_t topOfProcStack)
+ 162:src/sys/cmsis_gcc.h **** {
+ 163:src/sys/cmsis_gcc.h ****   __ASM volatile ("MSR psp, %0\n" : : "r" (topOfProcStack) : "sp");
+ 164:src/sys/cmsis_gcc.h **** }
+ 165:src/sys/cmsis_gcc.h **** 
+ 166:src/sys/cmsis_gcc.h **** 
+ 167:src/sys/cmsis_gcc.h **** /**
+ 168:src/sys/cmsis_gcc.h ****   \brief   Get Main Stack Pointer
+ 169:src/sys/cmsis_gcc.h ****   \details Returns the current value of the Main Stack Pointer (MSP).
+ 170:src/sys/cmsis_gcc.h ****   \return               MSP Register value
+ 171:src/sys/cmsis_gcc.h ****  */
+ 172:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_MSP(void)
+ 173:src/sys/cmsis_gcc.h **** {
+ 174:src/sys/cmsis_gcc.h ****   register uint32_t result;
+ 175:src/sys/cmsis_gcc.h **** 
+ 176:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, msp\n" : "=r" (result) );
+ 177:src/sys/cmsis_gcc.h ****   return(result);
+ 178:src/sys/cmsis_gcc.h **** }
+ 179:src/sys/cmsis_gcc.h **** 
+ 180:src/sys/cmsis_gcc.h **** 
+ 181:src/sys/cmsis_gcc.h **** /**
+ 182:src/sys/cmsis_gcc.h ****   \brief   Set Main Stack Pointer
+ 183:src/sys/cmsis_gcc.h ****   \details Assigns the given value to the Main Stack Pointer (MSP).
+ 184:src/sys/cmsis_gcc.h **** 
+ 185:src/sys/cmsis_gcc.h ****     \param [in]    topOfMainStack  Main Stack Pointer value to set
+ 186:src/sys/cmsis_gcc.h ****  */
+ 187:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_MSP(uint32_t topOfMainStack)
+ 188:src/sys/cmsis_gcc.h **** {
+ 189:src/sys/cmsis_gcc.h ****   __ASM volatile ("MSR msp, %0\n" : : "r" (topOfMainStack) : "sp");
+ 190:src/sys/cmsis_gcc.h **** }
+ 191:src/sys/cmsis_gcc.h **** 
+ 192:src/sys/cmsis_gcc.h **** 
+ 193:src/sys/cmsis_gcc.h **** /**
+ 194:src/sys/cmsis_gcc.h ****   \brief   Get Priority Mask
+ 195:src/sys/cmsis_gcc.h ****   \details Returns the current state of the priority mask bit from the Priority Mask Register.
+ 196:src/sys/cmsis_gcc.h ****   \return               Priority Mask value
+ 197:src/sys/cmsis_gcc.h ****  */
+ 198:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PRIMASK(void)
+ 199:src/sys/cmsis_gcc.h **** {
+ 200:src/sys/cmsis_gcc.h ****   uint32_t result;
+ 201:src/sys/cmsis_gcc.h **** 
+ 202:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, primask" : "=r" (result) );
+ 203:src/sys/cmsis_gcc.h ****   return(result);
+ 204:src/sys/cmsis_gcc.h **** }
+ 205:src/sys/cmsis_gcc.h **** 
+ 206:src/sys/cmsis_gcc.h **** 
+ 207:src/sys/cmsis_gcc.h **** /**
+ 208:src/sys/cmsis_gcc.h ****   \brief   Set Priority Mask
+ 209:src/sys/cmsis_gcc.h ****   \details Assigns the given value to the Priority Mask Register.
+ 210:src/sys/cmsis_gcc.h ****   \param [in]    priMask  Priority Mask
+ 211:src/sys/cmsis_gcc.h ****  */
+ 212:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PRIMASK(uint32_t priMask)
+ 213:src/sys/cmsis_gcc.h **** {
+ 214:src/sys/cmsis_gcc.h ****   __ASM volatile ("MSR primask, %0" : : "r" (priMask) : "memory");
+ 215:src/sys/cmsis_gcc.h **** }
+ 216:src/sys/cmsis_gcc.h **** 
+ 217:src/sys/cmsis_gcc.h **** 
+ 218:src/sys/cmsis_gcc.h **** #if       (__CORTEX_M >= 0x03U)
+ 219:src/sys/cmsis_gcc.h **** 
+ 220:src/sys/cmsis_gcc.h **** /**
+ 221:src/sys/cmsis_gcc.h ****   \brief   Enable FIQ
+ 222:src/sys/cmsis_gcc.h ****   \details Enables FIQ interrupts by clearing the F-bit in the CPSR.
+ 223:src/sys/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 224:src/sys/cmsis_gcc.h ****  */
+ 225:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_fault_irq(void)
+ 226:src/sys/cmsis_gcc.h **** {
+ 227:src/sys/cmsis_gcc.h ****   __ASM volatile ("cpsie f" : : : "memory");
+ 228:src/sys/cmsis_gcc.h **** }
+ 229:src/sys/cmsis_gcc.h **** 
+ 230:src/sys/cmsis_gcc.h **** 
+ 231:src/sys/cmsis_gcc.h **** /**
+ 232:src/sys/cmsis_gcc.h ****   \brief   Disable FIQ
+ 233:src/sys/cmsis_gcc.h ****   \details Disables FIQ interrupts by setting the F-bit in the CPSR.
+ 234:src/sys/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 235:src/sys/cmsis_gcc.h ****  */
+ 236:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_fault_irq(void)
+ 237:src/sys/cmsis_gcc.h **** {
+ 238:src/sys/cmsis_gcc.h ****   __ASM volatile ("cpsid f" : : : "memory");
+ 239:src/sys/cmsis_gcc.h **** }
+ 240:src/sys/cmsis_gcc.h **** 
+ 241:src/sys/cmsis_gcc.h **** 
+ 242:src/sys/cmsis_gcc.h **** /**
+ 243:src/sys/cmsis_gcc.h ****   \brief   Get Base Priority
+ 244:src/sys/cmsis_gcc.h ****   \details Returns the current value of the Base Priority register.
+ 245:src/sys/cmsis_gcc.h ****   \return               Base Priority register value
+ 246:src/sys/cmsis_gcc.h ****  */
+ 247:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_BASEPRI(void)
+ 248:src/sys/cmsis_gcc.h **** {
+ 249:src/sys/cmsis_gcc.h ****   uint32_t result;
+ 250:src/sys/cmsis_gcc.h **** 
+ 251:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, basepri" : "=r" (result) );
+ 252:src/sys/cmsis_gcc.h ****   return(result);
+ 253:src/sys/cmsis_gcc.h **** }
+ 254:src/sys/cmsis_gcc.h **** 
+ 255:src/sys/cmsis_gcc.h **** 
+ 256:src/sys/cmsis_gcc.h **** /**
+ 257:src/sys/cmsis_gcc.h ****   \brief   Set Base Priority
+ 258:src/sys/cmsis_gcc.h ****   \details Assigns the given value to the Base Priority register.
+ 259:src/sys/cmsis_gcc.h ****   \param [in]    basePri  Base Priority value to set
+ 260:src/sys/cmsis_gcc.h ****  */
+ 261:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_BASEPRI(uint32_t value)
+ 262:src/sys/cmsis_gcc.h **** {
+ 263:src/sys/cmsis_gcc.h ****   __ASM volatile ("MSR basepri, %0" : : "r" (value) : "memory");
+ 264:src/sys/cmsis_gcc.h **** }
+ 265:src/sys/cmsis_gcc.h **** 
+ 266:src/sys/cmsis_gcc.h **** 
+ 267:src/sys/cmsis_gcc.h **** /**
+ 268:src/sys/cmsis_gcc.h ****   \brief   Set Base Priority with condition
+ 269:src/sys/cmsis_gcc.h ****   \details Assigns the given value to the Base Priority register only if BASEPRI masking is disable
+ 270:src/sys/cmsis_gcc.h ****            or the new value increases the BASEPRI priority level.
+ 271:src/sys/cmsis_gcc.h ****   \param [in]    basePri  Base Priority value to set
+ 272:src/sys/cmsis_gcc.h ****  */
+ 273:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_BASEPRI_MAX(uint32_t value)
+ 274:src/sys/cmsis_gcc.h **** {
+ 275:src/sys/cmsis_gcc.h ****   __ASM volatile ("MSR basepri_max, %0" : : "r" (value) : "memory");
+ 276:src/sys/cmsis_gcc.h **** }
+ 277:src/sys/cmsis_gcc.h **** 
+ 278:src/sys/cmsis_gcc.h **** 
+ 279:src/sys/cmsis_gcc.h **** /**
+ 280:src/sys/cmsis_gcc.h ****   \brief   Get Fault Mask
+ 281:src/sys/cmsis_gcc.h ****   \details Returns the current value of the Fault Mask register.
+ 282:src/sys/cmsis_gcc.h ****   \return               Fault Mask register value
+ 283:src/sys/cmsis_gcc.h ****  */
+ 284:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_FAULTMASK(void)
+ 285:src/sys/cmsis_gcc.h **** {
+ 286:src/sys/cmsis_gcc.h ****   uint32_t result;
+ 287:src/sys/cmsis_gcc.h **** 
+ 288:src/sys/cmsis_gcc.h ****   __ASM volatile ("MRS %0, faultmask" : "=r" (result) );
+ 289:src/sys/cmsis_gcc.h ****   return(result);
+ 290:src/sys/cmsis_gcc.h **** }
+ 291:src/sys/cmsis_gcc.h **** 
+ 292:src/sys/cmsis_gcc.h **** 
+ 293:src/sys/cmsis_gcc.h **** /**
+ 294:src/sys/cmsis_gcc.h ****   \brief   Set Fault Mask
+ 295:src/sys/cmsis_gcc.h ****   \details Assigns the given value to the Fault Mask register.
+ 296:src/sys/cmsis_gcc.h ****   \param [in]    faultMask  Fault Mask value to set
+ 297:src/sys/cmsis_gcc.h ****  */
+ 298:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_FAULTMASK(uint32_t faultMask)
+ 299:src/sys/cmsis_gcc.h **** {
+ 300:src/sys/cmsis_gcc.h ****   __ASM volatile ("MSR faultmask, %0" : : "r" (faultMask) : "memory");
+ 301:src/sys/cmsis_gcc.h **** }
+ 302:src/sys/cmsis_gcc.h **** 
+ 303:src/sys/cmsis_gcc.h **** #endif /* (__CORTEX_M >= 0x03U) */
+ 304:src/sys/cmsis_gcc.h **** 
+ 305:src/sys/cmsis_gcc.h **** 
+ 306:src/sys/cmsis_gcc.h **** #if       (__CORTEX_M == 0x04U) || (__CORTEX_M == 0x07U)
+ 307:src/sys/cmsis_gcc.h **** 
+ 308:src/sys/cmsis_gcc.h **** /**
+ 309:src/sys/cmsis_gcc.h ****   \brief   Get FPSCR
+ 310:src/sys/cmsis_gcc.h ****   \details Returns the current value of the Floating Point Status/Control register.
+ 311:src/sys/cmsis_gcc.h ****   \return               Floating Point Status/Control register value
+ 312:src/sys/cmsis_gcc.h ****  */
+ 313:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_FPSCR(void)
+ 314:src/sys/cmsis_gcc.h **** {
+ 315:src/sys/cmsis_gcc.h **** #if (__FPU_PRESENT == 1U) && (__FPU_USED == 1U)
+ 316:src/sys/cmsis_gcc.h ****   uint32_t result;
+ 317:src/sys/cmsis_gcc.h **** 
+ 318:src/sys/cmsis_gcc.h ****   /* Empty asm statement works as a scheduling barrier */
+ 319:src/sys/cmsis_gcc.h ****   __ASM volatile ("");
+ 320:src/sys/cmsis_gcc.h ****   __ASM volatile ("VMRS %0, fpscr" : "=r" (result) );
+ 321:src/sys/cmsis_gcc.h ****   __ASM volatile ("");
+ 322:src/sys/cmsis_gcc.h ****   return(result);
+ 323:src/sys/cmsis_gcc.h **** #else
+ 324:src/sys/cmsis_gcc.h ****    return(0);
+ 325:src/sys/cmsis_gcc.h **** #endif
+ 326:src/sys/cmsis_gcc.h **** }
+ 327:src/sys/cmsis_gcc.h **** 
+ 328:src/sys/cmsis_gcc.h **** 
+ 329:src/sys/cmsis_gcc.h **** /**
+ 330:src/sys/cmsis_gcc.h ****   \brief   Set FPSCR
+ 331:src/sys/cmsis_gcc.h ****   \details Assigns the given value to the Floating Point Status/Control register.
+ 332:src/sys/cmsis_gcc.h ****   \param [in]    fpscr  Floating Point Status/Control value to set
+ 333:src/sys/cmsis_gcc.h ****  */
+ 334:src/sys/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_FPSCR(uint32_t fpscr)
+ 335:src/sys/cmsis_gcc.h **** {
+ 336:src/sys/cmsis_gcc.h **** #if (__FPU_PRESENT == 1U) && (__FPU_USED == 1U)
+ 337:src/sys/cmsis_gcc.h ****   /* Empty asm statement works as a scheduling barrier */
+ 338:src/sys/cmsis_gcc.h ****   __ASM volatile ("");
+ 339:src/sys/cmsis_gcc.h ****   __ASM volatile ("VMSR fpscr, %0" : : "r" (fpscr) : "vfpcc");
+ 340:src/sys/cmsis_gcc.h ****   __ASM volatile ("");
+ 341:src/sys/cmsis_gcc.h **** #endif
+ 342:src/sys/cmsis_gcc.h **** }
+ 343:src/sys/cmsis_gcc.h **** 
+ 344:src/sys/cmsis_gcc.h **** #endif /* (__CORTEX_M == 0x04U) || (__CORTEX_M == 0x07U) */
+ 345:src/sys/cmsis_gcc.h **** 
+ 346:src/sys/cmsis_gcc.h **** 
+ 347:src/sys/cmsis_gcc.h **** 
+ 348:src/sys/cmsis_gcc.h **** /*@} end of CMSIS_Core_RegAccFunctions */
+ 349:src/sys/cmsis_gcc.h **** 
+ 350:src/sys/cmsis_gcc.h **** 
+ 351:src/sys/cmsis_gcc.h **** /* ##########################  Core Instruction Access  ######################### */
+ 352:src/sys/cmsis_gcc.h **** /** \defgroup CMSIS_Core_InstructionInterface CMSIS Core Instruction Interface
+ 353:src/sys/cmsis_gcc.h ****   Access to dedicated instructions
+ 354:src/sys/cmsis_gcc.h ****   @{
+ 355:src/sys/cmsis_gcc.h **** */
+ 356:src/sys/cmsis_gcc.h **** 
+ 357:src/sys/cmsis_gcc.h **** /* Define macros for porting to both thumb1 and thumb2.
+ 358:src/sys/cmsis_gcc.h ****  * For thumb1, use low register (r0-r7), specified by constraint "l"
+ 359:src/sys/cmsis_gcc.h ****  * Otherwise, use general registers, specified by constraint "r" */
+ 360:src/sys/cmsis_gcc.h **** #if defined (__thumb__) && !defined (__thumb2__)
+ 361:src/sys/cmsis_gcc.h **** #define __CMSIS_GCC_OUT_REG(r) "=l" (r)
+ 362:src/sys/cmsis_gcc.h **** #define __CMSIS_GCC_USE_REG(r) "l" (r)
+ 363:src/sys/cmsis_gcc.h **** #else
+ 364:src/sys/cmsis_gcc.h **** #define __CMSIS_GCC_OUT_REG(r) "=r" (r)
+ 365:src/sys/cmsis_gcc.h **** #define __CMSIS_GCC_USE_REG(r) "r" (r)
+ 366:src/sys/cmsis_gcc.h **** #endif
+ 367:src/sys/cmsis_gcc.h **** 
+ 368:src/sys/cmsis_gcc.h **** /**
+ 369:src/sys/cmsis_gcc.h ****   \brief   No Operation
+ 370:src/sys/cmsis_gcc.h ****   \details No Operation does nothing. This instruction can be used for code alignment purposes.
+ 371:src/sys/cmsis_gcc.h ****  */
+ 372:src/sys/cmsis_gcc.h **** __attribute__((always_inline)) __STATIC_INLINE void __NOP(void)
+ 373:src/sys/cmsis_gcc.h **** {
+ 374:src/sys/cmsis_gcc.h ****   __ASM volatile ("nop");
+ 375:src/sys/cmsis_gcc.h **** }
+ 376:src/sys/cmsis_gcc.h **** 
+ 377:src/sys/cmsis_gcc.h **** 
+ 378:src/sys/cmsis_gcc.h **** /**
+ 379:src/sys/cmsis_gcc.h ****   \brief   Wait For Interrupt
+ 380:src/sys/cmsis_gcc.h ****   \details Wait For Interrupt is a hint instruction that suspends execution until one of a number o
+ 381:src/sys/cmsis_gcc.h ****  */
+ 382:src/sys/cmsis_gcc.h **** __attribute__((always_inline)) __STATIC_INLINE void __WFI(void)
+ 383:src/sys/cmsis_gcc.h **** {
+ 384:src/sys/cmsis_gcc.h ****   __ASM volatile ("wfi");
+ 385:src/sys/cmsis_gcc.h **** }
+ 386:src/sys/cmsis_gcc.h **** 
+ 387:src/sys/cmsis_gcc.h **** 
+ 388:src/sys/cmsis_gcc.h **** /**
+ 389:src/sys/cmsis_gcc.h ****   \brief   Wait For Event
+ 390:src/sys/cmsis_gcc.h ****   \details Wait For Event is a hint instruction that permits the processor to enter
+ 391:src/sys/cmsis_gcc.h ****     a low-power state until one of a number of events occurs.
+ 392:src/sys/cmsis_gcc.h ****  */
+ 393:src/sys/cmsis_gcc.h **** __attribute__((always_inline)) __STATIC_INLINE void __WFE(void)
+ 394:src/sys/cmsis_gcc.h **** {
+ 395:src/sys/cmsis_gcc.h ****   __ASM volatile ("wfe");
+ 396:src/sys/cmsis_gcc.h **** }
+ 397:src/sys/cmsis_gcc.h **** 
+ 398:src/sys/cmsis_gcc.h **** 
+ 399:src/sys/cmsis_gcc.h **** /**
+ 400:src/sys/cmsis_gcc.h ****   \brief   Send Event
+ 401:src/sys/cmsis_gcc.h ****   \details Send Event is a hint instruction. It causes an event to be signaled to the CPU.
+ 402:src/sys/cmsis_gcc.h ****  */
+ 403:src/sys/cmsis_gcc.h **** __attribute__((always_inline)) __STATIC_INLINE void __SEV(void)
+ 404:src/sys/cmsis_gcc.h **** {
+ 405:src/sys/cmsis_gcc.h ****   __ASM volatile ("sev");
+ 406:src/sys/cmsis_gcc.h **** }
+ 407:src/sys/cmsis_gcc.h **** 
+ 408:src/sys/cmsis_gcc.h **** 
+ 409:src/sys/cmsis_gcc.h **** /**
+ 410:src/sys/cmsis_gcc.h ****   \brief   Instruction Synchronization Barrier
+ 411:src/sys/cmsis_gcc.h ****   \details Instruction Synchronization Barrier flushes the pipeline in the processor,
+ 412:src/sys/cmsis_gcc.h ****            so that all instructions following the ISB are fetched from cache or memory,
+ 413:src/sys/cmsis_gcc.h ****            after the instruction has been completed.
+ 414:src/sys/cmsis_gcc.h ****  */
+ 415:src/sys/cmsis_gcc.h **** __attribute__((always_inline)) __STATIC_INLINE void __ISB(void)
+ 416:src/sys/cmsis_gcc.h **** {
+ 417:src/sys/cmsis_gcc.h ****   __ASM volatile ("isb 0xF":::"memory");
+ 418:src/sys/cmsis_gcc.h **** }
+ 419:src/sys/cmsis_gcc.h **** 
+ 420:src/sys/cmsis_gcc.h **** 
+ 421:src/sys/cmsis_gcc.h **** /**
+ 422:src/sys/cmsis_gcc.h ****   \brief   Data Synchronization Barrier
+ 423:src/sys/cmsis_gcc.h ****   \details Acts as a special kind of Data Memory Barrier.
+ 424:src/sys/cmsis_gcc.h ****            It completes when all explicit memory accesses before this instruction complete.
+ 425:src/sys/cmsis_gcc.h ****  */
+ 426:src/sys/cmsis_gcc.h **** __attribute__((always_inline)) __STATIC_INLINE void __DSB(void)
+ 427:src/sys/cmsis_gcc.h **** {
+ 428:src/sys/cmsis_gcc.h ****   __ASM volatile ("dsb 0xF":::"memory");
+  45              		.loc 3 428 0
+  46              		.syntax unified
+  47              	@ 428 "src/sys/cmsis_gcc.h" 1
+  48 000a BFF34F8F 		dsb 0xF
+  49              	@ 0 "" 2
+  50              		.thumb
+  51              		.syntax unified
+  52              	.LBE11:
+  53              	.LBE10:
+  54              	.LBE9:
+  55              	.LBE8:
+  13:src/sys/initial_LED.c ****     
+  14:src/sys/initial_LED.c ****     enable_GPIOA();
+  15:src/sys/initial_LED.c ****     
+  16:src/sys/initial_LED.c ****     /* Tri-LED setup */
+  17:src/sys/initial_LED.c ****     
+  18:src/sys/initial_LED.c ****     GPIOA.MODER = (GPIOA.MODER & ~(0x3F << 16)) | (0x15 << 16);
+  56              		.loc 1 18 0
+  57 000e 0C4B     		ldr	r3, .L2+4
+  58 0010 1A68     		ldr	r2, [r3]
+  59 0012 22F47C12 		bic	r2, r2, #4128768
+  60 0016 42F4A812 		orr	r2, r2, #1376256
+  61 001a 1A60     		str	r2, [r3]
+  19:src/sys/initial_LED.c ****     GPIOA.OTYPER = GPIOA.OTYPER & ~(0x7 << 8);
+  62              		.loc 1 19 0
+  63 001c 5A68     		ldr	r2, [r3, #4]
+  64 001e 22F4E062 		bic	r2, r2, #1792
+  65 0022 5A60     		str	r2, [r3, #4]
+  20:src/sys/initial_LED.c ****     
+  21:src/sys/initial_LED.c ****     /* Four-LEDs-Band */
+  22:src/sys/initial_LED.c ****     
+  23:src/sys/initial_LED.c ****     GPIOA.MODER = (GPIOA.MODER & ~(0xFF << 8)) | (0x55 << 8);
+  66              		.loc 1 23 0
+  67 0024 1A68     		ldr	r2, [r3]
+  68 0026 22F47F42 		bic	r2, r2, #65280
+  69 002a 42F4AA42 		orr	r2, r2, #21760
+  70 002e 1A60     		str	r2, [r3]
+  24:src/sys/initial_LED.c ****     GPIOA.OTYPER = GPIOA.OTYPER & ~(0xF << 4);
+  71              		.loc 1 24 0
+  72 0030 5A68     		ldr	r2, [r3, #4]
+  73 0032 22F0F002 		bic	r2, r2, #240
+  74 0036 5A60     		str	r2, [r3, #4]
+  75 0038 7047     		bx	lr
+  76              	.L3:
+  77 003a 00BF     		.align	2
+  78              	.L2:
+  79 003c 00000000 		.word	RCC
+  80 0040 00000000 		.word	GPIOA
+  81              		.cfi_endproc
+  82              	.LFE398:
+  83              		.size	initialize_LEDs, .-initialize_LEDs
+  84              		.align	1
+  85              		.global	board_current_state
+  86              		.thumb
+  87              		.thumb_func
+  88              		.type	board_current_state, %function
+  89              	board_current_state:
+  90              	.LFB399:
+  25:src/sys/initial_LED.c ****     
+  26:src/sys/initial_LED.c **** }
+  27:src/sys/initial_LED.c **** 
+  28:src/sys/initial_LED.c **** 
+  29:src/sys/initial_LED.c **** void board_current_state()
+  30:src/sys/initial_LED.c **** {
+  91              		.loc 1 30 0
+  92              		.cfi_startproc
+  93              		@ args = 0, pretend = 0, frame = 0
+  94              		@ frame_needed = 0, uses_anonymous_args = 0
+  95              		@ link register save eliminated.
+  31:src/sys/initial_LED.c ****     
+  32:src/sys/initial_LED.c ****     if(LED_flag == 0)  /*Play song*/
+  96              		.loc 1 32 0
+  97 0044 184B     		ldr	r3, .L10
+  98 0046 1A68     		ldr	r2, [r3]
+  99 0048 62B9     		cbnz	r2, .L5
+  33:src/sys/initial_LED.c ****         {
+  34:src/sys/initial_LED.c ****             
+  35:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR & ~(1 << 8); /* Red */
+ 100              		.loc 1 35 0
+ 101 004a 184B     		ldr	r3, .L10+4
+ 102 004c 5A69     		ldr	r2, [r3, #20]
+ 103 004e 22F48072 		bic	r2, r2, #256
+ 104 0052 5A61     		str	r2, [r3, #20]
+  36:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR & ~(1 << 10); /* Blue */
+ 105              		.loc 1 36 0
+ 106 0054 5A69     		ldr	r2, [r3, #20]
+ 107 0056 22F48062 		bic	r2, r2, #1024
+ 108 005a 5A61     		str	r2, [r3, #20]
+  37:src/sys/initial_LED.c ****             
+  38:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR | (0b1 << 9) ; /* Green */
+ 109              		.loc 1 38 0
+ 110 005c 5A69     		ldr	r2, [r3, #20]
+ 111 005e 42F40072 		orr	r2, r2, #512
+ 112 0062 1EE0     		b	.L8
+ 113              	.L5:
+  39:src/sys/initial_LED.c ****             
+  40:src/sys/initial_LED.c ****         }
+  41:src/sys/initial_LED.c ****     else if(LED_flag == 1)  /*Pause song*/
+ 114              		.loc 1 41 0
+ 115 0064 1A68     		ldr	r2, [r3]
+ 116 0066 012A     		cmp	r2, #1
+ 117 0068 0CD1     		bne	.L7
+  42:src/sys/initial_LED.c ****         {
+  43:src/sys/initial_LED.c ****             
+  44:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR & ~(1 << 9); /* Green */
+ 118              		.loc 1 44 0
+ 119 006a 104B     		ldr	r3, .L10+4
+ 120 006c 5A69     		ldr	r2, [r3, #20]
+ 121 006e 22F40072 		bic	r2, r2, #512
+ 122 0072 5A61     		str	r2, [r3, #20]
+  45:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR & ~(1 << 10); /* Blue */
+ 123              		.loc 1 45 0
+ 124 0074 5A69     		ldr	r2, [r3, #20]
+ 125 0076 22F48062 		bic	r2, r2, #1024
+ 126 007a 5A61     		str	r2, [r3, #20]
+  46:src/sys/initial_LED.c ****             
+  47:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR | (0b1 << 8) ; /* Red */
+ 127              		.loc 1 47 0
+ 128 007c 5A69     		ldr	r2, [r3, #20]
+ 129 007e 42F48072 		orr	r2, r2, #256
+ 130 0082 0EE0     		b	.L8
+ 131              	.L7:
+  48:src/sys/initial_LED.c ****             
+  49:src/sys/initial_LED.c ****         }
+  50:src/sys/initial_LED.c ****     else if(LED_flag == 2)  /*Change song*/
+ 132              		.loc 1 50 0
+ 133 0084 1B68     		ldr	r3, [r3]
+ 134 0086 022B     		cmp	r3, #2
+ 135 0088 0CD1     		bne	.L4
+  51:src/sys/initial_LED.c ****         {
+  52:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR & ~(1 << 9); /* Green */
+ 136              		.loc 1 52 0
+ 137 008a 084B     		ldr	r3, .L10+4
+ 138 008c 5A69     		ldr	r2, [r3, #20]
+ 139 008e 22F40072 		bic	r2, r2, #512
+ 140 0092 5A61     		str	r2, [r3, #20]
+  53:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR & ~(1 << 8); /* Red */
+ 141              		.loc 1 53 0
+ 142 0094 5A69     		ldr	r2, [r3, #20]
+ 143 0096 22F48072 		bic	r2, r2, #256
+ 144 009a 5A61     		str	r2, [r3, #20]
+  54:src/sys/initial_LED.c ****             
+  55:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR | (0b1 << 10) ; /* Blue */
+ 145              		.loc 1 55 0
+ 146 009c 5A69     		ldr	r2, [r3, #20]
+ 147 009e 42F48062 		orr	r2, r2, #1024
+ 148              	.L8:
+ 149 00a2 5A61     		str	r2, [r3, #20]
+ 150              	.L4:
+ 151 00a4 7047     		bx	lr
+ 152              	.L11:
+ 153 00a6 00BF     		.align	2
+ 154              	.L10:
+ 155 00a8 00000000 		.word	LED_flag
+ 156 00ac 00000000 		.word	GPIOA
+ 157              		.cfi_endproc
+ 158              	.LFE399:
+ 159              		.size	board_current_state, .-board_current_state
+ 160              		.align	1
+ 161              		.global	read_value_switch
+ 162              		.thumb
+ 163              		.thumb_func
+ 164              		.type	read_value_switch, %function
+ 165              	read_value_switch:
+ 166              	.LFB401:
+  56:src/sys/initial_LED.c ****         }
+  57:src/sys/initial_LED.c ****     
+  58:src/sys/initial_LED.c ****     
+  59:src/sys/initial_LED.c **** }
+  60:src/sys/initial_LED.c **** 
+  61:src/sys/initial_LED.c **** void four_LED_band() /* Function wich modifies the play lights depnding on the user's choice*/
+  62:src/sys/initial_LED.c **** {
+  63:src/sys/initial_LED.c ****     
+  64:src/sys/initial_LED.c ****     if(LED_flag == 2 || read_value_switch() == 0) /* if next song / switch to 0*/
+  65:src/sys/initial_LED.c ****         {
+  66:src/sys/initial_LED.c ****             GPIOA.ODR = GPIOA.ODR & ~(0xF << 4); /* Turn off the 4 LEDs*/
+  67:src/sys/initial_LED.c ****         }
+  68:src/sys/initial_LED.c ****     else
+  69:src/sys/initial_LED.c ****         {
+  70:src/sys/initial_LED.c ****             if(read_value_switch() == 1)  /* LED Model Option 1 */
+  71:src/sys/initial_LED.c ****                 {
+  72:src/sys/initial_LED.c ****                         if(step_4_LEDs == 0 + LED_offset) 
+  73:src/sys/initial_LED.c ****                             {
+  74:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1010 << 4);
+  75:src/sys/initial_LED.c ****                             }
+  76:src/sys/initial_LED.c **** 
+  77:src/sys/initial_LED.c ****                         if(step_4_LEDs == 1 + LED_offset) 
+  78:src/sys/initial_LED.c ****                             {
+  79:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0101 << 4);
+  80:src/sys/initial_LED.c ****                             }
+  81:src/sys/initial_LED.c ****                         
+  82:src/sys/initial_LED.c ****                         if(step_4_LEDs == 2 + LED_offset) 
+  83:src/sys/initial_LED.c ****                             {
+  84:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0011 << 4);
+  85:src/sys/initial_LED.c ****                             }
+  86:src/sys/initial_LED.c **** 
+  87:src/sys/initial_LED.c ****                         if(step_4_LEDs == 3 + LED_offset) 
+  88:src/sys/initial_LED.c ****                             {
+  89:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1100 << 4);
+  90:src/sys/initial_LED.c ****                             }
+  91:src/sys/initial_LED.c ****                             
+  92:src/sys/initial_LED.c ****                         if(step_4_LEDs == 4 + LED_offset) 
+  93:src/sys/initial_LED.c ****                             {
+  94:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0110 << 4);
+  95:src/sys/initial_LED.c ****                             }
+  96:src/sys/initial_LED.c **** 
+  97:src/sys/initial_LED.c ****                         if(step_4_LEDs == 5 + LED_offset) 
+  98:src/sys/initial_LED.c ****                             {
+  99:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1001 << 4);
+ 100:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 6;
+ 101:src/sys/initial_LED.c ****                             }    
+ 102:src/sys/initial_LED.c ****                 }
+ 103:src/sys/initial_LED.c ****                 else if(read_value_switch() == 2)  /* LED Model Option 2 */
+ 104:src/sys/initial_LED.c ****                 {
+ 105:src/sys/initial_LED.c ****                     
+ 106:src/sys/initial_LED.c ****                         if(step_4_LEDs == 0 + LED_offset) 
+ 107:src/sys/initial_LED.c ****                             {
+ 108:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0100 << 4);
+ 109:src/sys/initial_LED.c **** 
+ 110:src/sys/initial_LED.c ****                             }
+ 111:src/sys/initial_LED.c **** 
+ 112:src/sys/initial_LED.c ****                         if(step_4_LEDs == 1 + LED_offset) 
+ 113:src/sys/initial_LED.c ****                             {
+ 114:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1100 << 4);
+ 115:src/sys/initial_LED.c ****                             }
+ 116:src/sys/initial_LED.c ****                         
+ 117:src/sys/initial_LED.c ****                         if(step_4_LEDs == 2 + LED_offset) 
+ 118:src/sys/initial_LED.c ****                             {
+ 119:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1101 << 4);
+ 120:src/sys/initial_LED.c ****                             }
+ 121:src/sys/initial_LED.c **** 
+ 122:src/sys/initial_LED.c ****                         if(step_4_LEDs == 3 + LED_offset) 
+ 123:src/sys/initial_LED.c ****                             {
+ 124:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1111 << 4);
+ 125:src/sys/initial_LED.c ****                             }
+ 126:src/sys/initial_LED.c ****                             
+ 127:src/sys/initial_LED.c ****                         if(step_4_LEDs == 4 + LED_offset) 
+ 128:src/sys/initial_LED.c ****                             {
+ 129:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4));
+ 130:src/sys/initial_LED.c ****                             }
+ 131:src/sys/initial_LED.c ****                             
+ 132:src/sys/initial_LED.c ****                         if(step_4_LEDs == 5 + LED_offset) 
+ 133:src/sys/initial_LED.c ****                             {
+ 134:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1111 << 4);
+ 135:src/sys/initial_LED.c ****                             }
+ 136:src/sys/initial_LED.c ****                         
+ 137:src/sys/initial_LED.c ****                         if(step_4_LEDs == 6 + LED_offset) 
+ 138:src/sys/initial_LED.c ****                             {
+ 139:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1101 << 4);
+ 140:src/sys/initial_LED.c ****                             }
+ 141:src/sys/initial_LED.c ****                         
+ 142:src/sys/initial_LED.c ****                         if(step_4_LEDs == 7 + LED_offset) 
+ 143:src/sys/initial_LED.c ****                             {
+ 144:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1100 << 4);
+ 145:src/sys/initial_LED.c ****                             }
+ 146:src/sys/initial_LED.c ****                         
+ 147:src/sys/initial_LED.c ****                         if(step_4_LEDs == 8 + LED_offset) 
+ 148:src/sys/initial_LED.c ****                             {
+ 149:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0100 << 4);
+ 150:src/sys/initial_LED.c ****                             }
+ 151:src/sys/initial_LED.c ****                         
+ 152:src/sys/initial_LED.c ****                         if(step_4_LEDs == 9 + LED_offset) 
+ 153:src/sys/initial_LED.c ****                             {
+ 154:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0000 << 4);
+ 155:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 10;
+ 156:src/sys/initial_LED.c ****                             }
+ 157:src/sys/initial_LED.c ****                 }
+ 158:src/sys/initial_LED.c ****                 else if(read_value_switch() == 4)  /* LED Model Option 3 */
+ 159:src/sys/initial_LED.c ****                 {
+ 160:src/sys/initial_LED.c ****                     
+ 161:src/sys/initial_LED.c ****                         if(step_4_LEDs == 0 + LED_offset) 
+ 162:src/sys/initial_LED.c ****                             {
+ 163:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0110 << 4);
+ 164:src/sys/initial_LED.c ****                             }
+ 165:src/sys/initial_LED.c ****                         
+ 166:src/sys/initial_LED.c ****                         if(step_4_LEDs == 1 + LED_offset)
+ 167:src/sys/initial_LED.c ****                             {
+ 168:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1001 << 4);
+ 169:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 2;
+ 170:src/sys/initial_LED.c ****                             }
+ 171:src/sys/initial_LED.c ****                             
+ 172:src/sys/initial_LED.c ****                         if(step_4_LEDs == 2 + LED_offset) 
+ 173:src/sys/initial_LED.c ****                             {
+ 174:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1100 << 4);
+ 175:src/sys/initial_LED.c ****                             }
+ 176:src/sys/initial_LED.c ****                         
+ 177:src/sys/initial_LED.c ****                         if(step_4_LEDs == 3 + LED_offset) 
+ 178:src/sys/initial_LED.c ****                             {
+ 179:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0011 << 4);
+ 180:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 4;
+ 181:src/sys/initial_LED.c ****                             }
+ 182:src/sys/initial_LED.c ****                             
+ 183:src/sys/initial_LED.c ****                 }
+ 184:src/sys/initial_LED.c ****                 else if(read_value_switch() == 8)  /* LED Model Option 4 */
+ 185:src/sys/initial_LED.c ****                 {
+ 186:src/sys/initial_LED.c ****                     
+ 187:src/sys/initial_LED.c ****                         if(step_4_LEDs == 0 + LED_offset) 
+ 188:src/sys/initial_LED.c ****                             {
+ 189:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1000 << 4);
+ 190:src/sys/initial_LED.c ****                             }
+ 191:src/sys/initial_LED.c ****                         
+ 192:src/sys/initial_LED.c ****                         if(step_4_LEDs == 1 + LED_offset) 
+ 193:src/sys/initial_LED.c ****                             {
+ 194:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0100 << 4);
+ 195:src/sys/initial_LED.c ****                             }
+ 196:src/sys/initial_LED.c ****                         
+ 197:src/sys/initial_LED.c ****                         if(step_4_LEDs == 2 + LED_offset) 
+ 198:src/sys/initial_LED.c ****                             {
+ 199:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0010 << 4);
+ 200:src/sys/initial_LED.c ****                             }
+ 201:src/sys/initial_LED.c ****                         
+ 202:src/sys/initial_LED.c ****                         if(step_4_LEDs == 3 + LED_offset) 
+ 203:src/sys/initial_LED.c ****                             {
+ 204:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0001 << 4);
+ 205:src/sys/initial_LED.c ****                             }
+ 206:src/sys/initial_LED.c ****                         
+ 207:src/sys/initial_LED.c ****                         if(step_4_LEDs == 4 + LED_offset) 
+ 208:src/sys/initial_LED.c ****                             {
+ 209:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0010 << 4);
+ 210:src/sys/initial_LED.c ****                             }
+ 211:src/sys/initial_LED.c ****                         
+ 212:src/sys/initial_LED.c ****                         if(step_4_LEDs == 5 + LED_offset) 
+ 213:src/sys/initial_LED.c ****                             {
+ 214:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0100 << 4);
+ 215:src/sys/initial_LED.c ****                             }
+ 216:src/sys/initial_LED.c ****                         
+ 217:src/sys/initial_LED.c ****                         if(step_4_LEDs == 6 + LED_offset) 
+ 218:src/sys/initial_LED.c ****                             {
+ 219:src/sys/initial_LED.c ****                                 GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1000 << 4);
+ 220:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 7;
+ 221:src/sys/initial_LED.c ****                             }
+ 222:src/sys/initial_LED.c ****                             
+ 223:src/sys/initial_LED.c ****                 }
+ 224:src/sys/initial_LED.c ****                 else
+ 225:src/sys/initial_LED.c ****                 {
+ 226:src/sys/initial_LED.c ****                     GPIOA.ODR = GPIOA.ODR & ~(0xF << 4); /* If the user chooses another model that 
+ 227:src/sys/initial_LED.c ****                     
+ 228:src/sys/initial_LED.c ****                 }
+ 229:src/sys/initial_LED.c ****             
+ 230:src/sys/initial_LED.c ****         }
+ 231:src/sys/initial_LED.c ****     
+ 232:src/sys/initial_LED.c **** }
+ 233:src/sys/initial_LED.c **** 
+ 234:src/sys/initial_LED.c **** 
+ 235:src/sys/initial_LED.c **** uint32_t read_value_switch()
+ 236:src/sys/initial_LED.c **** {
+ 167              		.loc 1 236 0
+ 168              		.cfi_startproc
+ 169              		@ args = 0, pretend = 0, frame = 0
+ 170              		@ frame_needed = 0, uses_anonymous_args = 0
+ 171              		@ link register save eliminated.
+ 237:src/sys/initial_LED.c ****     return ((GPIOB.IDR & (0x78)) >> 3); /* We return the current value of the switches */ 
+ 172              		.loc 1 237 0
+ 173 00b0 024B     		ldr	r3, .L13
+ 174 00b2 1869     		ldr	r0, [r3, #16]
+ 238:src/sys/initial_LED.c **** }
+ 175              		.loc 1 238 0
+ 176 00b4 C0F3C300 		ubfx	r0, r0, #3, #4
+ 177 00b8 7047     		bx	lr
+ 178              	.L14:
+ 179 00ba 00BF     		.align	2
+ 180              	.L13:
+ 181 00bc 00000000 		.word	GPIOB
+ 182              		.cfi_endproc
+ 183              	.LFE401:
+ 184              		.size	read_value_switch, .-read_value_switch
+ 185              		.align	1
+ 186              		.global	four_LED_band
+ 187              		.thumb
+ 188              		.thumb_func
+ 189              		.type	four_LED_band, %function
+ 190              	four_LED_band:
+ 191              	.LFB400:
+  62:src/sys/initial_LED.c ****     
+ 192              		.loc 1 62 0
+ 193              		.cfi_startproc
+ 194              		@ args = 0, pretend = 0, frame = 0
+ 195              		@ frame_needed = 0, uses_anonymous_args = 0
+  64:src/sys/initial_LED.c ****         {
+ 196              		.loc 1 64 0
+ 197 00c0 8A4B     		ldr	r3, .L52
+ 198 00c2 1B68     		ldr	r3, [r3]
+ 199 00c4 022B     		cmp	r3, #2
+  62:src/sys/initial_LED.c ****     
+ 200              		.loc 1 62 0
+ 201 00c6 10B5     		push	{r4, lr}
+ 202              		.cfi_def_cfa_offset 8
+ 203              		.cfi_offset 4, -8
+ 204              		.cfi_offset 14, -4
+  64:src/sys/initial_LED.c ****         {
+ 205              		.loc 1 64 0
+ 206 00c8 00F07681 		beq	.L41
+  64:src/sys/initial_LED.c ****         {
+ 207              		.loc 1 64 0 is_stmt 0 discriminator 1
+ 208 00cc FFF7FEFF 		bl	read_value_switch
+ 209              	.LVL0:
+ 210 00d0 0028     		cmp	r0, #0
+ 211 00d2 00F07181 		beq	.L41
+  70:src/sys/initial_LED.c ****                 {
+ 212              		.loc 1 70 0 is_stmt 1
+ 213 00d6 FFF7FEFF 		bl	read_value_switch
+ 214              	.LVL1:
+ 215 00da 0128     		cmp	r0, #1
+ 216 00dc 4DD1     		bne	.L19
+  72:src/sys/initial_LED.c ****                             {
+ 217              		.loc 1 72 0
+ 218 00de 844B     		ldr	r3, .L52+4
+ 219 00e0 844A     		ldr	r2, .L52+8
+ 220 00e2 1868     		ldr	r0, [r3]
+ 221 00e4 1168     		ldr	r1, [r2]
+ 222 00e6 8842     		cmp	r0, r1
+ 223 00e8 06D1     		bne	.L20
+  74:src/sys/initial_LED.c ****                             }
+ 224              		.loc 1 74 0
+ 225 00ea 8348     		ldr	r0, .L52+12
+ 226 00ec 4169     		ldr	r1, [r0, #20]
+ 227 00ee 21F0F001 		bic	r1, r1, #240
+ 228 00f2 41F0A001 		orr	r1, r1, #160
+ 229 00f6 4161     		str	r1, [r0, #20]
+ 230              	.L20:
+  77:src/sys/initial_LED.c ****                             {
+ 231              		.loc 1 77 0
+ 232 00f8 1168     		ldr	r1, [r2]
+ 233 00fa 1868     		ldr	r0, [r3]
+ 234 00fc 0131     		adds	r1, r1, #1
+ 235 00fe 8142     		cmp	r1, r0
+ 236 0100 06D1     		bne	.L21
+  79:src/sys/initial_LED.c ****                             }
+ 237              		.loc 1 79 0
+ 238 0102 7D48     		ldr	r0, .L52+12
+ 239 0104 4169     		ldr	r1, [r0, #20]
+ 240 0106 21F0F001 		bic	r1, r1, #240
+ 241 010a 41F05001 		orr	r1, r1, #80
+ 242 010e 4161     		str	r1, [r0, #20]
+ 243              	.L21:
+  82:src/sys/initial_LED.c ****                             {
+ 244              		.loc 1 82 0
+ 245 0110 1168     		ldr	r1, [r2]
+ 246 0112 1868     		ldr	r0, [r3]
+ 247 0114 0231     		adds	r1, r1, #2
+ 248 0116 8142     		cmp	r1, r0
+ 249 0118 06D1     		bne	.L22
+  84:src/sys/initial_LED.c ****                             }
+ 250              		.loc 1 84 0
+ 251 011a 7748     		ldr	r0, .L52+12
+ 252 011c 4169     		ldr	r1, [r0, #20]
+ 253 011e 21F0F001 		bic	r1, r1, #240
+ 254 0122 41F03001 		orr	r1, r1, #48
+ 255 0126 4161     		str	r1, [r0, #20]
+ 256              	.L22:
+  87:src/sys/initial_LED.c ****                             {
+ 257              		.loc 1 87 0
+ 258 0128 1168     		ldr	r1, [r2]
+ 259 012a 1868     		ldr	r0, [r3]
+ 260 012c 0331     		adds	r1, r1, #3
+ 261 012e 8142     		cmp	r1, r0
+ 262 0130 06D1     		bne	.L23
+  89:src/sys/initial_LED.c ****                             }
+ 263              		.loc 1 89 0
+ 264 0132 7148     		ldr	r0, .L52+12
+ 265 0134 4169     		ldr	r1, [r0, #20]
+ 266 0136 21F0F001 		bic	r1, r1, #240
+ 267 013a 41F0C001 		orr	r1, r1, #192
+ 268 013e 4161     		str	r1, [r0, #20]
+ 269              	.L23:
+  92:src/sys/initial_LED.c ****                             {
+ 270              		.loc 1 92 0
+ 271 0140 1168     		ldr	r1, [r2]
+ 272 0142 1868     		ldr	r0, [r3]
+ 273 0144 0431     		adds	r1, r1, #4
+ 274 0146 8142     		cmp	r1, r0
+ 275 0148 06D1     		bne	.L24
+  94:src/sys/initial_LED.c ****                             }
+ 276              		.loc 1 94 0
+ 277 014a 6B48     		ldr	r0, .L52+12
+ 278 014c 4169     		ldr	r1, [r0, #20]
+ 279 014e 21F0F001 		bic	r1, r1, #240
+ 280 0152 41F06001 		orr	r1, r1, #96
+ 281 0156 4161     		str	r1, [r0, #20]
+ 282              	.L24:
+  97:src/sys/initial_LED.c ****                             {
+ 283              		.loc 1 97 0
+ 284 0158 1268     		ldr	r2, [r2]
+ 285 015a 1868     		ldr	r0, [r3]
+ 286 015c 6549     		ldr	r1, .L52+8
+ 287 015e 531D     		adds	r3, r2, #5
+ 288 0160 8342     		cmp	r3, r0
+ 289 0162 40F02E81 		bne	.L15
+  99:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 6;
+ 290              		.loc 1 99 0
+ 291 0166 644A     		ldr	r2, .L52+12
+ 292 0168 5369     		ldr	r3, [r2, #20]
+ 293 016a 23F0F003 		bic	r3, r3, #240
+ 294 016e 43F09003 		orr	r3, r3, #144
+ 295 0172 5361     		str	r3, [r2, #20]
+ 100:src/sys/initial_LED.c ****                             }    
+ 296              		.loc 1 100 0
+ 297 0174 0B68     		ldr	r3, [r1]
+ 298 0176 0633     		adds	r3, r3, #6
+ 299 0178 1CE1     		b	.L51
+ 300              	.L19:
+ 103:src/sys/initial_LED.c ****                 {
+ 301              		.loc 1 103 0
+ 302 017a FFF7FEFF 		bl	read_value_switch
+ 303              	.LVL2:
+ 304 017e 0228     		cmp	r0, #2
+ 305 0180 76D1     		bne	.L26
+ 106:src/sys/initial_LED.c ****                             {
+ 306              		.loc 1 106 0
+ 307 0182 5B4B     		ldr	r3, .L52+4
+ 308 0184 5B4A     		ldr	r2, .L52+8
+ 309 0186 1868     		ldr	r0, [r3]
+ 310 0188 1168     		ldr	r1, [r2]
+ 311 018a 8842     		cmp	r0, r1
+ 312 018c 06D1     		bne	.L27
+ 108:src/sys/initial_LED.c **** 
+ 313              		.loc 1 108 0
+ 314 018e 5A48     		ldr	r0, .L52+12
+ 315 0190 4169     		ldr	r1, [r0, #20]
+ 316 0192 21F0F001 		bic	r1, r1, #240
+ 317 0196 41F04001 		orr	r1, r1, #64
+ 318 019a 4161     		str	r1, [r0, #20]
+ 319              	.L27:
+ 112:src/sys/initial_LED.c ****                             {
+ 320              		.loc 1 112 0
+ 321 019c 1168     		ldr	r1, [r2]
+ 322 019e 1868     		ldr	r0, [r3]
+ 323 01a0 0131     		adds	r1, r1, #1
+ 324 01a2 8142     		cmp	r1, r0
+ 325 01a4 06D1     		bne	.L28
+ 114:src/sys/initial_LED.c ****                             }
+ 326              		.loc 1 114 0
+ 327 01a6 5448     		ldr	r0, .L52+12
+ 328 01a8 4169     		ldr	r1, [r0, #20]
+ 329 01aa 21F0F001 		bic	r1, r1, #240
+ 330 01ae 41F0C001 		orr	r1, r1, #192
+ 331 01b2 4161     		str	r1, [r0, #20]
+ 332              	.L28:
+ 117:src/sys/initial_LED.c ****                             {
+ 333              		.loc 1 117 0
+ 334 01b4 1168     		ldr	r1, [r2]
+ 335 01b6 1868     		ldr	r0, [r3]
+ 336 01b8 0231     		adds	r1, r1, #2
+ 337 01ba 8142     		cmp	r1, r0
+ 338 01bc 06D1     		bne	.L29
+ 119:src/sys/initial_LED.c ****                             }
+ 339              		.loc 1 119 0
+ 340 01be 4E48     		ldr	r0, .L52+12
+ 341 01c0 4169     		ldr	r1, [r0, #20]
+ 342 01c2 21F0F001 		bic	r1, r1, #240
+ 343 01c6 41F0D001 		orr	r1, r1, #208
+ 344 01ca 4161     		str	r1, [r0, #20]
+ 345              	.L29:
+ 122:src/sys/initial_LED.c ****                             {
+ 346              		.loc 1 122 0
+ 347 01cc 1168     		ldr	r1, [r2]
+ 348 01ce 1868     		ldr	r0, [r3]
+ 349 01d0 0331     		adds	r1, r1, #3
+ 350 01d2 8142     		cmp	r1, r0
+ 124:src/sys/initial_LED.c ****                             }
+ 351              		.loc 1 124 0
+ 352 01d4 01BF     		itttt	eq
+ 353 01d6 4848     		ldreq	r0, .L52+12
+ 354 01d8 4169     		ldreq	r1, [r0, #20]
+ 355 01da 41F0F001 		orreq	r1, r1, #240
+ 356 01de 4161     		streq	r1, [r0, #20]
+ 127:src/sys/initial_LED.c ****                             {
+ 357              		.loc 1 127 0
+ 358 01e0 1168     		ldr	r1, [r2]
+ 359 01e2 1868     		ldr	r0, [r3]
+ 360 01e4 0431     		adds	r1, r1, #4
+ 361 01e6 8142     		cmp	r1, r0
+ 129:src/sys/initial_LED.c ****                             }
+ 362              		.loc 1 129 0
+ 363 01e8 01BF     		itttt	eq
+ 364 01ea 4348     		ldreq	r0, .L52+12
+ 365 01ec 4169     		ldreq	r1, [r0, #20]
+ 366 01ee 21F0F001 		biceq	r1, r1, #240
+ 367 01f2 4161     		streq	r1, [r0, #20]
+ 132:src/sys/initial_LED.c ****                             {
+ 368              		.loc 1 132 0
+ 369 01f4 1168     		ldr	r1, [r2]
+ 370 01f6 1868     		ldr	r0, [r3]
+ 371 01f8 0531     		adds	r1, r1, #5
+ 372 01fa 8142     		cmp	r1, r0
+ 134:src/sys/initial_LED.c ****                             }
+ 373              		.loc 1 134 0
+ 374 01fc 01BF     		itttt	eq
+ 375 01fe 3E48     		ldreq	r0, .L52+12
+ 376 0200 4169     		ldreq	r1, [r0, #20]
+ 377 0202 41F0F001 		orreq	r1, r1, #240
+ 378 0206 4161     		streq	r1, [r0, #20]
+ 137:src/sys/initial_LED.c ****                             {
+ 379              		.loc 1 137 0
+ 380 0208 1168     		ldr	r1, [r2]
+ 381 020a 1868     		ldr	r0, [r3]
+ 382 020c 0631     		adds	r1, r1, #6
+ 383 020e 8142     		cmp	r1, r0
+ 384 0210 06D1     		bne	.L33
+ 139:src/sys/initial_LED.c ****                             }
+ 385              		.loc 1 139 0
+ 386 0212 3948     		ldr	r0, .L52+12
+ 387 0214 4169     		ldr	r1, [r0, #20]
+ 388 0216 21F0F001 		bic	r1, r1, #240
+ 389 021a 41F0D001 		orr	r1, r1, #208
+ 390 021e 4161     		str	r1, [r0, #20]
+ 391              	.L33:
+ 142:src/sys/initial_LED.c ****                             {
+ 392              		.loc 1 142 0
+ 393 0220 1168     		ldr	r1, [r2]
+ 394 0222 1868     		ldr	r0, [r3]
+ 395 0224 0731     		adds	r1, r1, #7
+ 396 0226 8142     		cmp	r1, r0
+ 397 0228 06D1     		bne	.L34
+ 144:src/sys/initial_LED.c ****                             }
+ 398              		.loc 1 144 0
+ 399 022a 3348     		ldr	r0, .L52+12
+ 400 022c 4169     		ldr	r1, [r0, #20]
+ 401 022e 21F0F001 		bic	r1, r1, #240
+ 402 0232 41F0C001 		orr	r1, r1, #192
+ 403 0236 4161     		str	r1, [r0, #20]
+ 404              	.L34:
+ 147:src/sys/initial_LED.c ****                             {
+ 405              		.loc 1 147 0
+ 406 0238 1168     		ldr	r1, [r2]
+ 407 023a 1868     		ldr	r0, [r3]
+ 408 023c 0831     		adds	r1, r1, #8
+ 409 023e 8142     		cmp	r1, r0
+ 410 0240 06D1     		bne	.L35
+ 149:src/sys/initial_LED.c ****                             }
+ 411              		.loc 1 149 0
+ 412 0242 2D48     		ldr	r0, .L52+12
+ 413 0244 4169     		ldr	r1, [r0, #20]
+ 414 0246 21F0F001 		bic	r1, r1, #240
+ 415 024a 41F04001 		orr	r1, r1, #64
+ 416 024e 4161     		str	r1, [r0, #20]
+ 417              	.L35:
+ 152:src/sys/initial_LED.c ****                             {
+ 418              		.loc 1 152 0
+ 419 0250 1268     		ldr	r2, [r2]
+ 420 0252 1868     		ldr	r0, [r3]
+ 421 0254 2749     		ldr	r1, .L52+8
+ 422 0256 02F10903 		add	r3, r2, #9
+ 423 025a 8342     		cmp	r3, r0
+ 424 025c 40F0B180 		bne	.L15
+ 154:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 10;
+ 425              		.loc 1 154 0
+ 426 0260 254A     		ldr	r2, .L52+12
+ 427 0262 5369     		ldr	r3, [r2, #20]
+ 428 0264 23F0F003 		bic	r3, r3, #240
+ 429 0268 5361     		str	r3, [r2, #20]
+ 155:src/sys/initial_LED.c ****                             }
+ 430              		.loc 1 155 0
+ 431 026a 0B68     		ldr	r3, [r1]
+ 432 026c 0A33     		adds	r3, r3, #10
+ 433 026e A1E0     		b	.L51
+ 434              	.L26:
+ 158:src/sys/initial_LED.c ****                 {
+ 435              		.loc 1 158 0
+ 436 0270 FFF7FEFF 		bl	read_value_switch
+ 437              	.LVL3:
+ 438 0274 0428     		cmp	r0, #4
+ 439 0276 41D1     		bne	.L37
+ 161:src/sys/initial_LED.c ****                             {
+ 440              		.loc 1 161 0
+ 441 0278 1D4B     		ldr	r3, .L52+4
+ 442 027a 1E4A     		ldr	r2, .L52+8
+ 443 027c 1868     		ldr	r0, [r3]
+ 444 027e 1168     		ldr	r1, [r2]
+ 445 0280 8842     		cmp	r0, r1
+ 446 0282 06D1     		bne	.L38
+ 163:src/sys/initial_LED.c ****                             }
+ 447              		.loc 1 163 0
+ 448 0284 1C48     		ldr	r0, .L52+12
+ 449 0286 4169     		ldr	r1, [r0, #20]
+ 450 0288 21F0F001 		bic	r1, r1, #240
+ 451 028c 41F06001 		orr	r1, r1, #96
+ 452 0290 4161     		str	r1, [r0, #20]
+ 453              	.L38:
+ 166:src/sys/initial_LED.c ****                             {
+ 454              		.loc 1 166 0
+ 455 0292 1168     		ldr	r1, [r2]
+ 456 0294 1C68     		ldr	r4, [r3]
+ 457 0296 1748     		ldr	r0, .L52+8
+ 458 0298 0131     		adds	r1, r1, #1
+ 459 029a A142     		cmp	r1, r4
+ 460 029c 09D1     		bne	.L39
+ 168:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 2;
+ 461              		.loc 1 168 0
+ 462 029e 164C     		ldr	r4, .L52+12
+ 463 02a0 6169     		ldr	r1, [r4, #20]
+ 464 02a2 21F0F001 		bic	r1, r1, #240
+ 465 02a6 41F09001 		orr	r1, r1, #144
+ 466 02aa 6161     		str	r1, [r4, #20]
+ 169:src/sys/initial_LED.c ****                             }
+ 467              		.loc 1 169 0
+ 468 02ac 0168     		ldr	r1, [r0]
+ 469 02ae 0231     		adds	r1, r1, #2
+ 470 02b0 0160     		str	r1, [r0]
+ 471              	.L39:
+ 172:src/sys/initial_LED.c ****                             {
+ 472              		.loc 1 172 0
+ 473 02b2 1168     		ldr	r1, [r2]
+ 474 02b4 1868     		ldr	r0, [r3]
+ 475 02b6 0231     		adds	r1, r1, #2
+ 476 02b8 8142     		cmp	r1, r0
+ 477 02ba 06D1     		bne	.L40
+ 174:src/sys/initial_LED.c ****                             }
+ 478              		.loc 1 174 0
+ 479 02bc 0E48     		ldr	r0, .L52+12
+ 480 02be 4169     		ldr	r1, [r0, #20]
+ 481 02c0 21F0F001 		bic	r1, r1, #240
+ 482 02c4 41F0C001 		orr	r1, r1, #192
+ 483 02c8 4161     		str	r1, [r0, #20]
+ 484              	.L40:
+ 177:src/sys/initial_LED.c ****                             {
+ 485              		.loc 1 177 0
+ 486 02ca 1268     		ldr	r2, [r2]
+ 487 02cc 1868     		ldr	r0, [r3]
+ 488 02ce 0949     		ldr	r1, .L52+8
+ 489 02d0 D31C     		adds	r3, r2, #3
+ 490 02d2 8342     		cmp	r3, r0
+ 491 02d4 75D1     		bne	.L15
+ 179:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 4;
+ 492              		.loc 1 179 0
+ 493 02d6 084A     		ldr	r2, .L52+12
+ 494 02d8 5369     		ldr	r3, [r2, #20]
+ 495 02da 23F0F003 		bic	r3, r3, #240
+ 496 02de 43F03003 		orr	r3, r3, #48
+ 497 02e2 5361     		str	r3, [r2, #20]
+ 180:src/sys/initial_LED.c ****                             }
+ 498              		.loc 1 180 0
+ 499 02e4 0B68     		ldr	r3, [r1]
+ 500 02e6 0433     		adds	r3, r3, #4
+ 501 02e8 64E0     		b	.L51
+ 502              	.L53:
+ 503 02ea 00BF     		.align	2
+ 504              	.L52:
+ 505 02ec 00000000 		.word	LED_flag
+ 506 02f0 00000000 		.word	step_4_LEDs
+ 507 02f4 00000000 		.word	LED_offset
+ 508 02f8 00000000 		.word	GPIOA
+ 509              	.L37:
+ 184:src/sys/initial_LED.c ****                 {
+ 510              		.loc 1 184 0
+ 511 02fc FFF7FEFF 		bl	read_value_switch
+ 512              	.LVL4:
+ 513 0300 0828     		cmp	r0, #8
+ 514 0302 59D1     		bne	.L41
+ 187:src/sys/initial_LED.c ****                             {
+ 515              		.loc 1 187 0
+ 516 0304 2F4B     		ldr	r3, .L54
+ 517 0306 304A     		ldr	r2, .L54+4
+ 518 0308 1868     		ldr	r0, [r3]
+ 519 030a 1168     		ldr	r1, [r2]
+ 520 030c 8842     		cmp	r0, r1
+ 521 030e 06D1     		bne	.L42
+ 189:src/sys/initial_LED.c ****                             }
+ 522              		.loc 1 189 0
+ 523 0310 2E48     		ldr	r0, .L54+8
+ 524 0312 4169     		ldr	r1, [r0, #20]
+ 525 0314 21F0F001 		bic	r1, r1, #240
+ 526 0318 41F08001 		orr	r1, r1, #128
+ 527 031c 4161     		str	r1, [r0, #20]
+ 528              	.L42:
+ 192:src/sys/initial_LED.c ****                             {
+ 529              		.loc 1 192 0
+ 530 031e 1168     		ldr	r1, [r2]
+ 531 0320 1868     		ldr	r0, [r3]
+ 532 0322 0131     		adds	r1, r1, #1
+ 533 0324 8142     		cmp	r1, r0
+ 534 0326 06D1     		bne	.L43
+ 194:src/sys/initial_LED.c ****                             }
+ 535              		.loc 1 194 0
+ 536 0328 2848     		ldr	r0, .L54+8
+ 537 032a 4169     		ldr	r1, [r0, #20]
+ 538 032c 21F0F001 		bic	r1, r1, #240
+ 539 0330 41F04001 		orr	r1, r1, #64
+ 540 0334 4161     		str	r1, [r0, #20]
+ 541              	.L43:
+ 197:src/sys/initial_LED.c ****                             {
+ 542              		.loc 1 197 0
+ 543 0336 1168     		ldr	r1, [r2]
+ 544 0338 1868     		ldr	r0, [r3]
+ 545 033a 0231     		adds	r1, r1, #2
+ 546 033c 8142     		cmp	r1, r0
+ 547 033e 06D1     		bne	.L44
+ 199:src/sys/initial_LED.c ****                             }
+ 548              		.loc 1 199 0
+ 549 0340 2248     		ldr	r0, .L54+8
+ 550 0342 4169     		ldr	r1, [r0, #20]
+ 551 0344 21F0F001 		bic	r1, r1, #240
+ 552 0348 41F02001 		orr	r1, r1, #32
+ 553 034c 4161     		str	r1, [r0, #20]
+ 554              	.L44:
+ 202:src/sys/initial_LED.c ****                             {
+ 555              		.loc 1 202 0
+ 556 034e 1168     		ldr	r1, [r2]
+ 557 0350 1868     		ldr	r0, [r3]
+ 558 0352 0331     		adds	r1, r1, #3
+ 559 0354 8142     		cmp	r1, r0
+ 560 0356 06D1     		bne	.L45
+ 204:src/sys/initial_LED.c ****                             }
+ 561              		.loc 1 204 0
+ 562 0358 1C48     		ldr	r0, .L54+8
+ 563 035a 4169     		ldr	r1, [r0, #20]
+ 564 035c 21F0F001 		bic	r1, r1, #240
+ 565 0360 41F01001 		orr	r1, r1, #16
+ 566 0364 4161     		str	r1, [r0, #20]
+ 567              	.L45:
+ 207:src/sys/initial_LED.c ****                             {
+ 568              		.loc 1 207 0
+ 569 0366 1168     		ldr	r1, [r2]
+ 570 0368 1868     		ldr	r0, [r3]
+ 571 036a 0431     		adds	r1, r1, #4
+ 572 036c 8142     		cmp	r1, r0
+ 573 036e 06D1     		bne	.L46
+ 209:src/sys/initial_LED.c ****                             }
+ 574              		.loc 1 209 0
+ 575 0370 1648     		ldr	r0, .L54+8
+ 576 0372 4169     		ldr	r1, [r0, #20]
+ 577 0374 21F0F001 		bic	r1, r1, #240
+ 578 0378 41F02001 		orr	r1, r1, #32
+ 579 037c 4161     		str	r1, [r0, #20]
+ 580              	.L46:
+ 212:src/sys/initial_LED.c ****                             {
+ 581              		.loc 1 212 0
+ 582 037e 1168     		ldr	r1, [r2]
+ 583 0380 1868     		ldr	r0, [r3]
+ 584 0382 0531     		adds	r1, r1, #5
+ 585 0384 8142     		cmp	r1, r0
+ 586 0386 06D1     		bne	.L47
+ 214:src/sys/initial_LED.c ****                             }
+ 587              		.loc 1 214 0
+ 588 0388 1048     		ldr	r0, .L54+8
+ 589 038a 4169     		ldr	r1, [r0, #20]
+ 590 038c 21F0F001 		bic	r1, r1, #240
+ 591 0390 41F04001 		orr	r1, r1, #64
+ 592 0394 4161     		str	r1, [r0, #20]
+ 593              	.L47:
+ 217:src/sys/initial_LED.c ****                             {
+ 594              		.loc 1 217 0
+ 595 0396 1268     		ldr	r2, [r2]
+ 596 0398 1868     		ldr	r0, [r3]
+ 597 039a 0B49     		ldr	r1, .L54+4
+ 598 039c 931D     		adds	r3, r2, #6
+ 599 039e 8342     		cmp	r3, r0
+ 600 03a0 0FD1     		bne	.L15
+ 219:src/sys/initial_LED.c ****                                 LED_offset = LED_offset + 7;
+ 601              		.loc 1 219 0
+ 602 03a2 0A4A     		ldr	r2, .L54+8
+ 603 03a4 5369     		ldr	r3, [r2, #20]
+ 604 03a6 23F0F003 		bic	r3, r3, #240
+ 605 03aa 43F08003 		orr	r3, r3, #128
+ 606 03ae 5361     		str	r3, [r2, #20]
+ 220:src/sys/initial_LED.c ****                             }
+ 607              		.loc 1 220 0
+ 608 03b0 0B68     		ldr	r3, [r1]
+ 609 03b2 0733     		adds	r3, r3, #7
+ 610              	.L51:
+ 611 03b4 0B60     		str	r3, [r1]
+ 612 03b6 10BD     		pop	{r4, pc}
+ 613              	.L41:
+ 226:src/sys/initial_LED.c ****                     
+ 614              		.loc 1 226 0
+ 615 03b8 044A     		ldr	r2, .L54+8
+ 616 03ba 5369     		ldr	r3, [r2, #20]
+ 617 03bc 23F0F003 		bic	r3, r3, #240
+ 618 03c0 5361     		str	r3, [r2, #20]
+ 619              	.L15:
+ 620 03c2 10BD     		pop	{r4, pc}
+ 621              	.L55:
+ 622              		.align	2
+ 623              	.L54:
+ 624 03c4 00000000 		.word	step_4_LEDs
+ 625 03c8 00000000 		.word	LED_offset
+ 626 03cc 00000000 		.word	GPIOA
+ 627              		.cfi_endproc
+ 628              	.LFE400:
+ 629              		.size	four_LED_band, .-four_LED_band
+ 630              		.comm	LED_offset,4,4
+ 631              		.comm	LED_flag,4,4
+ 632              		.comm	step_4_LEDs,4,4
+ 633              	.Letext0:
+ 634              		.file 4 "/usr/include/newlib/machine/_default_types.h"
+ 635              		.file 5 "/usr/include/newlib/sys/_stdint.h"
+ 636              		.section	.debug_info,"",%progbits
+ 637              	.Ldebug_info0:
+ 638 0000 FC030000 		.4byte	0x3fc
+ 639 0004 0400     		.2byte	0x4
+ 640 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 641 000a 04       		.byte	0x4
+ 642 000b 01       		.uleb128 0x1
+ 643 000c 0A000000 		.4byte	.LASF65
+ 644 0010 0C       		.byte	0xc
+ 645 0011 83010000 		.4byte	.LASF66
+ 646 0015 29020000 		.4byte	.LASF67
+ 647 0019 00000000 		.4byte	.Ltext0
+ 648 001d D0030000 		.4byte	.Letext0-.Ltext0
+ 649 0021 00000000 		.4byte	.Ldebug_line0
+ 650 0025 02       		.uleb128 0x2
+ 651 0026 01       		.byte	0x1
+ 652 0027 06       		.byte	0x6
+ 653 0028 5A030000 		.4byte	.LASF0
+ 654 002c 02       		.uleb128 0x2
+ 655 002d 01       		.byte	0x1
+ 656 002e 08       		.byte	0x8
+ 657 002f 1B020000 		.4byte	.LASF1
+ 658 0033 02       		.uleb128 0x2
+ 659 0034 02       		.byte	0x2
+ 660 0035 05       		.byte	0x5
+ 661 0036 CB000000 		.4byte	.LASF2
+ 662 003a 02       		.uleb128 0x2
+ 663 003b 02       		.byte	0x2
+ 664 003c 07       		.byte	0x7
+ 665 003d EB020000 		.4byte	.LASF3
+ 666 0041 02       		.uleb128 0x2
+ 667 0042 04       		.byte	0x4
+ 668 0043 05       		.byte	0x5
+ 669 0044 F1010000 		.4byte	.LASF4
+ 670 0048 03       		.uleb128 0x3
+ 671 0049 06010000 		.4byte	.LASF11
+ 672 004d 04       		.byte	0x4
+ 673 004e 41       		.byte	0x41
+ 674 004f 53000000 		.4byte	0x53
+ 675 0053 02       		.uleb128 0x2
+ 676 0054 04       		.byte	0x4
+ 677 0055 07       		.byte	0x7
+ 678 0056 1F030000 		.4byte	.LASF5
+ 679 005a 02       		.uleb128 0x2
+ 680 005b 08       		.byte	0x8
+ 681 005c 05       		.byte	0x5
+ 682 005d DD010000 		.4byte	.LASF6
+ 683 0061 02       		.uleb128 0x2
+ 684 0062 08       		.byte	0x8
+ 685 0063 07       		.byte	0x7
+ 686 0064 80020000 		.4byte	.LASF7
+ 687 0068 04       		.uleb128 0x4
+ 688 0069 04       		.byte	0x4
+ 689 006a 05       		.byte	0x5
+ 690 006b 696E7400 		.ascii	"int\000"
+ 691 006f 02       		.uleb128 0x2
+ 692 0070 04       		.byte	0x4
+ 693 0071 07       		.byte	0x7
+ 694 0072 A0020000 		.4byte	.LASF8
+ 695 0076 02       		.uleb128 0x2
+ 696 0077 04       		.byte	0x4
+ 697 0078 07       		.byte	0x7
+ 698 0079 D5000000 		.4byte	.LASF9
+ 699 007d 02       		.uleb128 0x2
+ 700 007e 01       		.byte	0x1
+ 701 007f 08       		.byte	0x8
+ 702 0080 E6020000 		.4byte	.LASF10
+ 703 0084 03       		.uleb128 0x3
+ 704 0085 97020000 		.4byte	.LASF12
+ 705 0089 05       		.byte	0x5
+ 706 008a 30       		.byte	0x30
+ 707 008b 48000000 		.4byte	0x48
+ 708 008f 05       		.uleb128 0x5
+ 709 0090 B6020000 		.4byte	.LASF48
+ 710 0094 98       		.byte	0x98
+ 711 0095 02       		.byte	0x2
+ 712 0096 68       		.byte	0x68
+ 713 0097 63020000 		.4byte	0x263
+ 714 009b 06       		.uleb128 0x6
+ 715 009c 435200   		.ascii	"CR\000"
+ 716 009f 02       		.byte	0x2
+ 717 00a0 69       		.byte	0x69
+ 718 00a1 84000000 		.4byte	0x84
+ 719 00a5 00       		.byte	0
+ 720 00a6 07       		.uleb128 0x7
+ 721 00a7 CF020000 		.4byte	.LASF13
+ 722 00ab 02       		.byte	0x2
+ 723 00ac 6A       		.byte	0x6a
+ 724 00ad 84000000 		.4byte	0x84
+ 725 00b1 04       		.byte	0x4
+ 726 00b2 07       		.uleb128 0x7
+ 727 00b3 4D010000 		.4byte	.LASF14
+ 728 00b7 02       		.byte	0x2
+ 729 00b8 6B       		.byte	0x6b
+ 730 00b9 84000000 		.4byte	0x84
+ 731 00bd 08       		.byte	0x8
+ 732 00be 06       		.uleb128 0x6
+ 733 00bf 43495200 		.ascii	"CIR\000"
+ 734 00c3 02       		.byte	0x2
+ 735 00c4 6C       		.byte	0x6c
+ 736 00c5 84000000 		.4byte	0x84
+ 737 00c9 0C       		.byte	0xc
+ 738 00ca 07       		.uleb128 0x7
+ 739 00cb 83030000 		.4byte	.LASF15
+ 740 00cf 02       		.byte	0x2
+ 741 00d0 6D       		.byte	0x6d
+ 742 00d1 84000000 		.4byte	0x84
+ 743 00d5 10       		.byte	0x10
+ 744 00d6 07       		.uleb128 0x7
+ 745 00d7 AD020000 		.4byte	.LASF16
+ 746 00db 02       		.byte	0x2
+ 747 00dc 6E       		.byte	0x6e
+ 748 00dd 84000000 		.4byte	0x84
+ 749 00e1 14       		.byte	0x14
+ 750 00e2 07       		.uleb128 0x7
+ 751 00e3 9B030000 		.4byte	.LASF17
+ 752 00e7 02       		.byte	0x2
+ 753 00e8 6F       		.byte	0x6f
+ 754 00e9 84000000 		.4byte	0x84
+ 755 00ed 18       		.byte	0x18
+ 756 00ee 07       		.uleb128 0x7
+ 757 00ef FE020000 		.4byte	.LASF18
+ 758 00f3 02       		.byte	0x2
+ 759 00f4 70       		.byte	0x70
+ 760 00f5 84000000 		.4byte	0x84
+ 761 00f9 1C       		.byte	0x1c
+ 762 00fa 07       		.uleb128 0x7
+ 763 00fb AE000000 		.4byte	.LASF19
+ 764 00ff 02       		.byte	0x2
+ 765 0100 71       		.byte	0x71
+ 766 0101 84000000 		.4byte	0x84
+ 767 0105 20       		.byte	0x20
+ 768 0106 07       		.uleb128 0x7
+ 769 0107 12020000 		.4byte	.LASF20
+ 770 010b 02       		.byte	0x2
+ 771 010c 72       		.byte	0x72
+ 772 010d 84000000 		.4byte	0x84
+ 773 0111 24       		.byte	0x24
+ 774 0112 07       		.uleb128 0x7
+ 775 0113 8C030000 		.4byte	.LASF21
+ 776 0117 02       		.byte	0x2
+ 777 0118 73       		.byte	0x73
+ 778 0119 84000000 		.4byte	0x84
+ 779 011d 28       		.byte	0x28
+ 780 011e 07       		.uleb128 0x7
+ 781 011f CE030000 		.4byte	.LASF22
+ 782 0123 02       		.byte	0x2
+ 783 0124 74       		.byte	0x74
+ 784 0125 84000000 		.4byte	0x84
+ 785 0129 2C       		.byte	0x2c
+ 786 012a 07       		.uleb128 0x7
+ 787 012b 40030000 		.4byte	.LASF23
+ 788 012f 02       		.byte	0x2
+ 789 0130 75       		.byte	0x75
+ 790 0131 84000000 		.4byte	0x84
+ 791 0135 30       		.byte	0x30
+ 792 0136 07       		.uleb128 0x7
+ 793 0137 B7000000 		.4byte	.LASF24
+ 794 013b 02       		.byte	0x2
+ 795 013c 76       		.byte	0x76
+ 796 013d 84000000 		.4byte	0x84
+ 797 0141 34       		.byte	0x34
+ 798 0142 07       		.uleb128 0x7
+ 799 0143 C6010000 		.4byte	.LASF25
+ 800 0147 02       		.byte	0x2
+ 801 0148 77       		.byte	0x77
+ 802 0149 84000000 		.4byte	0x84
+ 803 014d 38       		.byte	0x38
+ 804 014e 07       		.uleb128 0x7
+ 805 014f 5D010000 		.4byte	.LASF26
+ 806 0153 02       		.byte	0x2
+ 807 0154 78       		.byte	0x78
+ 808 0155 84000000 		.4byte	0x84
+ 809 0159 3C       		.byte	0x3c
+ 810 015a 07       		.uleb128 0x7
+ 811 015b 7B010000 		.4byte	.LASF27
+ 812 015f 02       		.byte	0x2
+ 813 0160 79       		.byte	0x79
+ 814 0161 84000000 		.4byte	0x84
+ 815 0165 40       		.byte	0x40
+ 816 0166 07       		.uleb128 0x7
+ 817 0167 72020000 		.4byte	.LASF28
+ 818 016b 02       		.byte	0x2
+ 819 016c 7A       		.byte	0x7a
+ 820 016d 84000000 		.4byte	0x84
+ 821 0171 44       		.byte	0x44
+ 822 0172 07       		.uleb128 0x7
+ 823 0173 6C010000 		.4byte	.LASF29
+ 824 0177 02       		.byte	0x2
+ 825 0178 7B       		.byte	0x7b
+ 826 0179 84000000 		.4byte	0x84
+ 827 017d 48       		.byte	0x48
+ 828 017e 07       		.uleb128 0x7
+ 829 017f B7010000 		.4byte	.LASF30
+ 830 0183 02       		.byte	0x2
+ 831 0184 7C       		.byte	0x7c
+ 832 0185 84000000 		.4byte	0x84
+ 833 0189 4C       		.byte	0x4c
+ 834 018a 07       		.uleb128 0x7
+ 835 018b 00000000 		.4byte	.LASF31
+ 836 018f 02       		.byte	0x2
+ 837 0190 7D       		.byte	0x7d
+ 838 0191 84000000 		.4byte	0x84
+ 839 0195 50       		.byte	0x50
+ 840 0196 07       		.uleb128 0x7
+ 841 0197 0D030000 		.4byte	.LASF32
+ 842 019b 02       		.byte	0x2
+ 843 019c 7E       		.byte	0x7e
+ 844 019d 84000000 		.4byte	0x84
+ 845 01a1 54       		.byte	0x54
+ 846 01a2 07       		.uleb128 0x7
+ 847 01a3 3A010000 		.4byte	.LASF33
+ 848 01a7 02       		.byte	0x2
+ 849 01a8 7F       		.byte	0x7f
+ 850 01a9 84000000 		.4byte	0x84
+ 851 01ad 58       		.byte	0x58
+ 852 01ae 07       		.uleb128 0x7
+ 853 01af 31030000 		.4byte	.LASF34
+ 854 01b3 02       		.byte	0x2
+ 855 01b4 80       		.byte	0x80
+ 856 01b5 84000000 		.4byte	0x84
+ 857 01b9 5C       		.byte	0x5c
+ 858 01ba 07       		.uleb128 0x7
+ 859 01bb DC020000 		.4byte	.LASF35
+ 860 01bf 02       		.byte	0x2
+ 861 01c0 81       		.byte	0x81
+ 862 01c1 84000000 		.4byte	0x84
+ 863 01c5 60       		.byte	0x60
+ 864 01c6 07       		.uleb128 0x7
+ 865 01c7 C4030000 		.4byte	.LASF36
+ 866 01cb 02       		.byte	0x2
+ 867 01cc 82       		.byte	0x82
+ 868 01cd 84000000 		.4byte	0x84
+ 869 01d1 64       		.byte	0x64
+ 870 01d2 07       		.uleb128 0x7
+ 871 01d3 66030000 		.4byte	.LASF37
+ 872 01d7 02       		.byte	0x2
+ 873 01d8 83       		.byte	0x83
+ 874 01d9 84000000 		.4byte	0x84
+ 875 01dd 68       		.byte	0x68
+ 876 01de 07       		.uleb128 0x7
+ 877 01df 9F000000 		.4byte	.LASF38
+ 878 01e3 02       		.byte	0x2
+ 879 01e4 84       		.byte	0x84
+ 880 01e5 84000000 		.4byte	0x84
+ 881 01e9 6C       		.byte	0x6c
+ 882 01ea 07       		.uleb128 0x7
+ 883 01eb DE000000 		.4byte	.LASF39
+ 884 01ef 02       		.byte	0x2
+ 885 01f0 85       		.byte	0x85
+ 886 01f1 84000000 		.4byte	0x84
+ 887 01f5 70       		.byte	0x70
+ 888 01f6 06       		.uleb128 0x6
+ 889 01f7 43535200 		.ascii	"CSR\000"
+ 890 01fb 02       		.byte	0x2
+ 891 01fc 86       		.byte	0x86
+ 892 01fd 84000000 		.4byte	0x84
+ 893 0201 74       		.byte	0x74
+ 894 0202 07       		.uleb128 0x7
+ 895 0203 EC000000 		.4byte	.LASF40
+ 896 0207 02       		.byte	0x2
+ 897 0208 87       		.byte	0x87
+ 898 0209 84000000 		.4byte	0x84
+ 899 020d 78       		.byte	0x78
+ 900 020e 07       		.uleb128 0x7
+ 901 020f A8010000 		.4byte	.LASF41
+ 902 0213 02       		.byte	0x2
+ 903 0214 88       		.byte	0x88
+ 904 0215 84000000 		.4byte	0x84
+ 905 0219 7C       		.byte	0x7c
+ 906 021a 07       		.uleb128 0x7
+ 907 021b 11010000 		.4byte	.LASF42
+ 908 021f 02       		.byte	0x2
+ 909 0220 89       		.byte	0x89
+ 910 0221 84000000 		.4byte	0x84
+ 911 0225 80       		.byte	0x80
+ 912 0226 07       		.uleb128 0x7
+ 913 0227 FB000000 		.4byte	.LASF43
+ 914 022b 02       		.byte	0x2
+ 915 022c 8A       		.byte	0x8a
+ 916 022d 84000000 		.4byte	0x84
+ 917 0231 84       		.byte	0x84
+ 918 0232 07       		.uleb128 0x7
+ 919 0233 B4030000 		.4byte	.LASF44
+ 920 0237 02       		.byte	0x2
+ 921 0238 8B       		.byte	0x8b
+ 922 0239 84000000 		.4byte	0x84
+ 923 023d 88       		.byte	0x88
+ 924 023e 07       		.uleb128 0x7
+ 925 023f A0010000 		.4byte	.LASF45
+ 926 0243 02       		.byte	0x2
+ 927 0244 8C       		.byte	0x8c
+ 928 0245 84000000 		.4byte	0x84
+ 929 0249 8C       		.byte	0x8c
+ 930 024a 07       		.uleb128 0x7
+ 931 024b E3000000 		.4byte	.LASF46
+ 932 024f 02       		.byte	0x2
+ 933 0250 8D       		.byte	0x8d
+ 934 0251 84000000 		.4byte	0x84
+ 935 0255 90       		.byte	0x90
+ 936 0256 07       		.uleb128 0x7
+ 937 0257 44010000 		.4byte	.LASF47
+ 938 025b 02       		.byte	0x2
+ 939 025c 8E       		.byte	0x8e
+ 940 025d 84000000 		.4byte	0x84
+ 941 0261 94       		.byte	0x94
+ 942 0262 00       		.byte	0
+ 943 0263 05       		.uleb128 0x5
+ 944 0264 17010000 		.4byte	.LASF49
+ 945 0268 28       		.byte	0x28
+ 946 0269 02       		.byte	0x2
+ 947 026a 92       		.byte	0x92
+ 948 026b E8020000 		.4byte	0x2e8
+ 949 026f 07       		.uleb128 0x7
+ 950 0270 0C020000 		.4byte	.LASF50
+ 951 0274 02       		.byte	0x2
+ 952 0275 93       		.byte	0x93
+ 953 0276 84000000 		.4byte	0x84
+ 954 027a 00       		.byte	0
+ 955 027b 07       		.uleb128 0x7
+ 956 027c 99010000 		.4byte	.LASF51
+ 957 0280 02       		.byte	0x2
+ 958 0281 94       		.byte	0x94
+ 959 0282 84000000 		.4byte	0x84
+ 960 0286 04       		.byte	0x4
+ 961 0287 07       		.uleb128 0x7
+ 962 0288 17030000 		.4byte	.LASF52
+ 963 028c 02       		.byte	0x2
+ 964 028d 95       		.byte	0x95
+ 965 028e 84000000 		.4byte	0x84
+ 966 0292 08       		.byte	0x8
+ 967 0293 07       		.uleb128 0x7
+ 968 0294 EB010000 		.4byte	.LASF53
+ 969 0298 02       		.byte	0x2
+ 970 0299 96       		.byte	0x96
+ 971 029a 84000000 		.4byte	0x84
+ 972 029e 0C       		.byte	0xc
+ 973 029f 06       		.uleb128 0x6
+ 974 02a0 49445200 		.ascii	"IDR\000"
+ 975 02a4 02       		.byte	0x2
+ 976 02a5 97       		.byte	0x97
+ 977 02a6 84000000 		.4byte	0x84
+ 978 02aa 10       		.byte	0x10
+ 979 02ab 06       		.uleb128 0x6
+ 980 02ac 4F445200 		.ascii	"ODR\000"
+ 981 02b0 02       		.byte	0x2
+ 982 02b1 98       		.byte	0x98
+ 983 02b2 84000000 		.4byte	0x84
+ 984 02b6 14       		.byte	0x14
+ 985 02b7 07       		.uleb128 0x7
+ 986 02b8 FA010000 		.4byte	.LASF54
+ 987 02bc 02       		.byte	0x2
+ 988 02bd 99       		.byte	0x99
+ 989 02be 84000000 		.4byte	0x84
+ 990 02c2 18       		.byte	0x18
+ 991 02c3 07       		.uleb128 0x7
+ 992 02c4 BF030000 		.4byte	.LASF55
+ 993 02c8 02       		.byte	0x2
+ 994 02c9 9A       		.byte	0x9a
+ 995 02ca 84000000 		.4byte	0x84
+ 996 02ce 1C       		.byte	0x1c
+ 997 02cf 07       		.uleb128 0x7
+ 998 02d0 D7020000 		.4byte	.LASF56
+ 999 02d4 02       		.byte	0x2
+ 1000 02d5 9B       		.byte	0x9b
+ 1001 02d6 84000000 		.4byte	0x84
+ 1002 02da 20       		.byte	0x20
+ 1003 02db 07       		.uleb128 0x7
+ 1004 02dc CA020000 		.4byte	.LASF57
+ 1005 02e0 02       		.byte	0x2
+ 1006 02e1 9C       		.byte	0x9c
+ 1007 02e2 84000000 		.4byte	0x84
+ 1008 02e6 24       		.byte	0x24
+ 1009 02e7 00       		.byte	0
+ 1010 02e8 08       		.uleb128 0x8
+ 1011 02e9 7A020000 		.4byte	.LASF68
+ 1012 02ed 03       		.byte	0x3
+ 1013 02ee AA01     		.2byte	0x1aa
+ 1014 02f0 03       		.byte	0x3
+ 1015 02f1 09       		.uleb128 0x9
+ 1016 02f2 FF010000 		.4byte	.LASF69
+ 1017 02f6 02       		.byte	0x2
+ 1018 02f7 9C02     		.2byte	0x29c
+ 1019 02f9 03       		.byte	0x3
+ 1020 02fa 0A       		.uleb128 0xa
+ 1021 02fb A4030000 		.4byte	.LASF58
+ 1022 02ff 01       		.byte	0x1
+ 1023 0300 0B       		.byte	0xb
+ 1024 0301 00000000 		.4byte	.LFB398
+ 1025 0305 44000000 		.4byte	.LFE398-.LFB398
+ 1026 0309 01       		.uleb128 0x1
+ 1027 030a 9C       		.byte	0x9c
+ 1028 030b 30030000 		.4byte	0x330
+ 1029 030f 0B       		.uleb128 0xb
+ 1030 0310 F1020000 		.4byte	0x2f1
+ 1031 0314 00000000 		.4byte	.LBB8
+ 1032 0318 0E000000 		.4byte	.LBE8-.LBB8
+ 1033 031c 01       		.byte	0x1
+ 1034 031d 0E       		.byte	0xe
+ 1035 031e 0C       		.uleb128 0xc
+ 1036 031f E8020000 		.4byte	0x2e8
+ 1037 0323 0A000000 		.4byte	.LBB10
+ 1038 0327 04000000 		.4byte	.LBE10-.LBB10
+ 1039 032b 02       		.byte	0x2
+ 1040 032c 9C02     		.2byte	0x29c
+ 1041 032e 00       		.byte	0
+ 1042 032f 00       		.byte	0
+ 1043 0330 0D       		.uleb128 0xd
+ 1044 0331 26010000 		.4byte	.LASF70
+ 1045 0335 01       		.byte	0x1
+ 1046 0336 1D       		.byte	0x1d
+ 1047 0337 44000000 		.4byte	.LFB399
+ 1048 033b 6C000000 		.4byte	.LFE399-.LFB399
+ 1049 033f 01       		.uleb128 0x1
+ 1050 0340 9C       		.byte	0x9c
+ 1051 0341 0E       		.uleb128 0xe
+ 1052 0342 48030000 		.4byte	.LASF71
+ 1053 0346 01       		.byte	0x1
+ 1054 0347 EB       		.byte	0xeb
+ 1055 0348 84000000 		.4byte	0x84
+ 1056 034c B0000000 		.4byte	.LFB401
+ 1057 0350 10000000 		.4byte	.LFE401-.LFB401
+ 1058 0354 01       		.uleb128 0x1
+ 1059 0355 9C       		.byte	0x9c
+ 1060 0356 0A       		.uleb128 0xa
+ 1061 0357 75030000 		.4byte	.LASF59
+ 1062 035b 01       		.byte	0x1
+ 1063 035c 3D       		.byte	0x3d
+ 1064 035d C0000000 		.4byte	.LFB400
+ 1065 0361 10030000 		.4byte	.LFE400-.LFB400
+ 1066 0365 01       		.uleb128 0x1
+ 1067 0366 9C       		.byte	0x9c
+ 1068 0367 99030000 		.4byte	0x399
+ 1069 036b 0F       		.uleb128 0xf
+ 1070 036c D0000000 		.4byte	.LVL0
+ 1071 0370 41030000 		.4byte	0x341
+ 1072 0374 0F       		.uleb128 0xf
+ 1073 0375 DA000000 		.4byte	.LVL1
+ 1074 0379 41030000 		.4byte	0x341
+ 1075 037d 0F       		.uleb128 0xf
+ 1076 037e 7E010000 		.4byte	.LVL2
+ 1077 0382 41030000 		.4byte	0x341
+ 1078 0386 0F       		.uleb128 0xf
+ 1079 0387 74020000 		.4byte	.LVL3
+ 1080 038b 41030000 		.4byte	0x341
+ 1081 038f 0F       		.uleb128 0xf
+ 1082 0390 00030000 		.4byte	.LVL4
+ 1083 0394 41030000 		.4byte	0x341
+ 1084 0398 00       		.byte	0
+ 1085 0399 10       		.uleb128 0x10
+ 1086 039a 52434300 		.ascii	"RCC\000"
+ 1087 039e 02       		.byte	0x2
+ 1088 039f 3D02     		.2byte	0x23d
+ 1089 03a1 A5030000 		.4byte	0x3a5
+ 1090 03a5 11       		.uleb128 0x11
+ 1091 03a6 8F000000 		.4byte	0x8f
+ 1092 03aa 12       		.uleb128 0x12
+ 1093 03ab C4020000 		.4byte	.LASF60
+ 1094 03af 02       		.byte	0x2
+ 1095 03b0 4502     		.2byte	0x245
+ 1096 03b2 B6030000 		.4byte	0x3b6
+ 1097 03b6 11       		.uleb128 0x11
+ 1098 03b7 63020000 		.4byte	0x263
+ 1099 03bb 12       		.uleb128 0x12
+ 1100 03bc D7010000 		.4byte	.LASF61
+ 1101 03c0 02       		.byte	0x2
+ 1102 03c1 4602     		.2byte	0x246
+ 1103 03c3 B6030000 		.4byte	0x3b6
+ 1104 03c7 13       		.uleb128 0x13
+ 1105 03c8 BF000000 		.4byte	.LASF62
+ 1106 03cc 01       		.byte	0x1
+ 1107 03cd 06       		.byte	0x6
+ 1108 03ce D8030000 		.4byte	0x3d8
+ 1109 03d2 05       		.uleb128 0x5
+ 1110 03d3 03       		.byte	0x3
+ 1111 03d4 00000000 		.4byte	step_4_LEDs
+ 1112 03d8 11       		.uleb128 0x11
+ 1113 03d9 84000000 		.4byte	0x84
+ 1114 03dd 13       		.uleb128 0x13
+ 1115 03de CE010000 		.4byte	.LASF63
+ 1116 03e2 01       		.byte	0x1
+ 1117 03e3 07       		.byte	0x7
+ 1118 03e4 D8030000 		.4byte	0x3d8
+ 1119 03e8 05       		.uleb128 0x5
+ 1120 03e9 03       		.byte	0x3
+ 1121 03ea 00000000 		.4byte	LED_flag
+ 1122 03ee 13       		.uleb128 0x13
+ 1123 03ef 52010000 		.4byte	.LASF64
+ 1124 03f3 01       		.byte	0x1
+ 1125 03f4 08       		.byte	0x8
+ 1126 03f5 D8030000 		.4byte	0x3d8
+ 1127 03f9 05       		.uleb128 0x5
+ 1128 03fa 03       		.byte	0x3
+ 1129 03fb 00000000 		.4byte	LED_offset
+ 1130 03ff 00       		.byte	0
+ 1131              		.section	.debug_abbrev,"",%progbits
+ 1132              	.Ldebug_abbrev0:
+ 1133 0000 01       		.uleb128 0x1
+ 1134 0001 11       		.uleb128 0x11
+ 1135 0002 01       		.byte	0x1
+ 1136 0003 25       		.uleb128 0x25
+ 1137 0004 0E       		.uleb128 0xe
+ 1138 0005 13       		.uleb128 0x13
+ 1139 0006 0B       		.uleb128 0xb
+ 1140 0007 03       		.uleb128 0x3
+ 1141 0008 0E       		.uleb128 0xe
+ 1142 0009 1B       		.uleb128 0x1b
+ 1143 000a 0E       		.uleb128 0xe
+ 1144 000b 11       		.uleb128 0x11
+ 1145 000c 01       		.uleb128 0x1
+ 1146 000d 12       		.uleb128 0x12
+ 1147 000e 06       		.uleb128 0x6
+ 1148 000f 10       		.uleb128 0x10
+ 1149 0010 17       		.uleb128 0x17
+ 1150 0011 00       		.byte	0
+ 1151 0012 00       		.byte	0
+ 1152 0013 02       		.uleb128 0x2
+ 1153 0014 24       		.uleb128 0x24
+ 1154 0015 00       		.byte	0
+ 1155 0016 0B       		.uleb128 0xb
+ 1156 0017 0B       		.uleb128 0xb
+ 1157 0018 3E       		.uleb128 0x3e
+ 1158 0019 0B       		.uleb128 0xb
+ 1159 001a 03       		.uleb128 0x3
+ 1160 001b 0E       		.uleb128 0xe
+ 1161 001c 00       		.byte	0
+ 1162 001d 00       		.byte	0
+ 1163 001e 03       		.uleb128 0x3
+ 1164 001f 16       		.uleb128 0x16
+ 1165 0020 00       		.byte	0
+ 1166 0021 03       		.uleb128 0x3
+ 1167 0022 0E       		.uleb128 0xe
+ 1168 0023 3A       		.uleb128 0x3a
+ 1169 0024 0B       		.uleb128 0xb
+ 1170 0025 3B       		.uleb128 0x3b
+ 1171 0026 0B       		.uleb128 0xb
+ 1172 0027 49       		.uleb128 0x49
+ 1173 0028 13       		.uleb128 0x13
+ 1174 0029 00       		.byte	0
+ 1175 002a 00       		.byte	0
+ 1176 002b 04       		.uleb128 0x4
+ 1177 002c 24       		.uleb128 0x24
+ 1178 002d 00       		.byte	0
+ 1179 002e 0B       		.uleb128 0xb
+ 1180 002f 0B       		.uleb128 0xb
+ 1181 0030 3E       		.uleb128 0x3e
+ 1182 0031 0B       		.uleb128 0xb
+ 1183 0032 03       		.uleb128 0x3
+ 1184 0033 08       		.uleb128 0x8
+ 1185 0034 00       		.byte	0
+ 1186 0035 00       		.byte	0
+ 1187 0036 05       		.uleb128 0x5
+ 1188 0037 13       		.uleb128 0x13
+ 1189 0038 01       		.byte	0x1
+ 1190 0039 03       		.uleb128 0x3
+ 1191 003a 0E       		.uleb128 0xe
+ 1192 003b 0B       		.uleb128 0xb
+ 1193 003c 0B       		.uleb128 0xb
+ 1194 003d 3A       		.uleb128 0x3a
+ 1195 003e 0B       		.uleb128 0xb
+ 1196 003f 3B       		.uleb128 0x3b
+ 1197 0040 0B       		.uleb128 0xb
+ 1198 0041 01       		.uleb128 0x1
+ 1199 0042 13       		.uleb128 0x13
+ 1200 0043 00       		.byte	0
+ 1201 0044 00       		.byte	0
+ 1202 0045 06       		.uleb128 0x6
+ 1203 0046 0D       		.uleb128 0xd
+ 1204 0047 00       		.byte	0
+ 1205 0048 03       		.uleb128 0x3
+ 1206 0049 08       		.uleb128 0x8
+ 1207 004a 3A       		.uleb128 0x3a
+ 1208 004b 0B       		.uleb128 0xb
+ 1209 004c 3B       		.uleb128 0x3b
+ 1210 004d 0B       		.uleb128 0xb
+ 1211 004e 49       		.uleb128 0x49
+ 1212 004f 13       		.uleb128 0x13
+ 1213 0050 38       		.uleb128 0x38
+ 1214 0051 0B       		.uleb128 0xb
+ 1215 0052 00       		.byte	0
+ 1216 0053 00       		.byte	0
+ 1217 0054 07       		.uleb128 0x7
+ 1218 0055 0D       		.uleb128 0xd
+ 1219 0056 00       		.byte	0
+ 1220 0057 03       		.uleb128 0x3
+ 1221 0058 0E       		.uleb128 0xe
+ 1222 0059 3A       		.uleb128 0x3a
+ 1223 005a 0B       		.uleb128 0xb
+ 1224 005b 3B       		.uleb128 0x3b
+ 1225 005c 0B       		.uleb128 0xb
+ 1226 005d 49       		.uleb128 0x49
+ 1227 005e 13       		.uleb128 0x13
+ 1228 005f 38       		.uleb128 0x38
+ 1229 0060 0B       		.uleb128 0xb
+ 1230 0061 00       		.byte	0
+ 1231 0062 00       		.byte	0
+ 1232 0063 08       		.uleb128 0x8
+ 1233 0064 2E       		.uleb128 0x2e
+ 1234 0065 00       		.byte	0
+ 1235 0066 03       		.uleb128 0x3
+ 1236 0067 0E       		.uleb128 0xe
+ 1237 0068 3A       		.uleb128 0x3a
+ 1238 0069 0B       		.uleb128 0xb
+ 1239 006a 3B       		.uleb128 0x3b
+ 1240 006b 05       		.uleb128 0x5
+ 1241 006c 27       		.uleb128 0x27
+ 1242 006d 19       		.uleb128 0x19
+ 1243 006e 20       		.uleb128 0x20
+ 1244 006f 0B       		.uleb128 0xb
+ 1245 0070 00       		.byte	0
+ 1246 0071 00       		.byte	0
+ 1247 0072 09       		.uleb128 0x9
+ 1248 0073 2E       		.uleb128 0x2e
+ 1249 0074 00       		.byte	0
+ 1250 0075 03       		.uleb128 0x3
+ 1251 0076 0E       		.uleb128 0xe
+ 1252 0077 3A       		.uleb128 0x3a
+ 1253 0078 0B       		.uleb128 0xb
+ 1254 0079 3B       		.uleb128 0x3b
+ 1255 007a 05       		.uleb128 0x5
+ 1256 007b 20       		.uleb128 0x20
+ 1257 007c 0B       		.uleb128 0xb
+ 1258 007d 00       		.byte	0
+ 1259 007e 00       		.byte	0
+ 1260 007f 0A       		.uleb128 0xa
+ 1261 0080 2E       		.uleb128 0x2e
+ 1262 0081 01       		.byte	0x1
+ 1263 0082 3F       		.uleb128 0x3f
+ 1264 0083 19       		.uleb128 0x19
+ 1265 0084 03       		.uleb128 0x3
+ 1266 0085 0E       		.uleb128 0xe
+ 1267 0086 3A       		.uleb128 0x3a
+ 1268 0087 0B       		.uleb128 0xb
+ 1269 0088 3B       		.uleb128 0x3b
+ 1270 0089 0B       		.uleb128 0xb
+ 1271 008a 11       		.uleb128 0x11
+ 1272 008b 01       		.uleb128 0x1
+ 1273 008c 12       		.uleb128 0x12
+ 1274 008d 06       		.uleb128 0x6
+ 1275 008e 40       		.uleb128 0x40
+ 1276 008f 18       		.uleb128 0x18
+ 1277 0090 9742     		.uleb128 0x2117
+ 1278 0092 19       		.uleb128 0x19
+ 1279 0093 01       		.uleb128 0x1
+ 1280 0094 13       		.uleb128 0x13
+ 1281 0095 00       		.byte	0
+ 1282 0096 00       		.byte	0
+ 1283 0097 0B       		.uleb128 0xb
+ 1284 0098 1D       		.uleb128 0x1d
+ 1285 0099 01       		.byte	0x1
+ 1286 009a 31       		.uleb128 0x31
+ 1287 009b 13       		.uleb128 0x13
+ 1288 009c 11       		.uleb128 0x11
+ 1289 009d 01       		.uleb128 0x1
+ 1290 009e 12       		.uleb128 0x12
+ 1291 009f 06       		.uleb128 0x6
+ 1292 00a0 58       		.uleb128 0x58
+ 1293 00a1 0B       		.uleb128 0xb
+ 1294 00a2 59       		.uleb128 0x59
+ 1295 00a3 0B       		.uleb128 0xb
+ 1296 00a4 00       		.byte	0
+ 1297 00a5 00       		.byte	0
+ 1298 00a6 0C       		.uleb128 0xc
+ 1299 00a7 1D       		.uleb128 0x1d
+ 1300 00a8 00       		.byte	0
+ 1301 00a9 31       		.uleb128 0x31
+ 1302 00aa 13       		.uleb128 0x13
+ 1303 00ab 11       		.uleb128 0x11
+ 1304 00ac 01       		.uleb128 0x1
+ 1305 00ad 12       		.uleb128 0x12
+ 1306 00ae 06       		.uleb128 0x6
+ 1307 00af 58       		.uleb128 0x58
+ 1308 00b0 0B       		.uleb128 0xb
+ 1309 00b1 59       		.uleb128 0x59
+ 1310 00b2 05       		.uleb128 0x5
+ 1311 00b3 00       		.byte	0
+ 1312 00b4 00       		.byte	0
+ 1313 00b5 0D       		.uleb128 0xd
+ 1314 00b6 2E       		.uleb128 0x2e
+ 1315 00b7 00       		.byte	0
+ 1316 00b8 3F       		.uleb128 0x3f
+ 1317 00b9 19       		.uleb128 0x19
+ 1318 00ba 03       		.uleb128 0x3
+ 1319 00bb 0E       		.uleb128 0xe
+ 1320 00bc 3A       		.uleb128 0x3a
+ 1321 00bd 0B       		.uleb128 0xb
+ 1322 00be 3B       		.uleb128 0x3b
+ 1323 00bf 0B       		.uleb128 0xb
+ 1324 00c0 11       		.uleb128 0x11
+ 1325 00c1 01       		.uleb128 0x1
+ 1326 00c2 12       		.uleb128 0x12
+ 1327 00c3 06       		.uleb128 0x6
+ 1328 00c4 40       		.uleb128 0x40
+ 1329 00c5 18       		.uleb128 0x18
+ 1330 00c6 9742     		.uleb128 0x2117
+ 1331 00c8 19       		.uleb128 0x19
+ 1332 00c9 00       		.byte	0
+ 1333 00ca 00       		.byte	0
+ 1334 00cb 0E       		.uleb128 0xe
+ 1335 00cc 2E       		.uleb128 0x2e
+ 1336 00cd 00       		.byte	0
+ 1337 00ce 3F       		.uleb128 0x3f
+ 1338 00cf 19       		.uleb128 0x19
+ 1339 00d0 03       		.uleb128 0x3
+ 1340 00d1 0E       		.uleb128 0xe
+ 1341 00d2 3A       		.uleb128 0x3a
+ 1342 00d3 0B       		.uleb128 0xb
+ 1343 00d4 3B       		.uleb128 0x3b
+ 1344 00d5 0B       		.uleb128 0xb
+ 1345 00d6 49       		.uleb128 0x49
+ 1346 00d7 13       		.uleb128 0x13
+ 1347 00d8 11       		.uleb128 0x11
+ 1348 00d9 01       		.uleb128 0x1
+ 1349 00da 12       		.uleb128 0x12
+ 1350 00db 06       		.uleb128 0x6
+ 1351 00dc 40       		.uleb128 0x40
+ 1352 00dd 18       		.uleb128 0x18
+ 1353 00de 9742     		.uleb128 0x2117
+ 1354 00e0 19       		.uleb128 0x19
+ 1355 00e1 00       		.byte	0
+ 1356 00e2 00       		.byte	0
+ 1357 00e3 0F       		.uleb128 0xf
+ 1358 00e4 898201   		.uleb128 0x4109
+ 1359 00e7 00       		.byte	0
+ 1360 00e8 11       		.uleb128 0x11
+ 1361 00e9 01       		.uleb128 0x1
+ 1362 00ea 31       		.uleb128 0x31
+ 1363 00eb 13       		.uleb128 0x13
+ 1364 00ec 00       		.byte	0
+ 1365 00ed 00       		.byte	0
+ 1366 00ee 10       		.uleb128 0x10
+ 1367 00ef 34       		.uleb128 0x34
+ 1368 00f0 00       		.byte	0
+ 1369 00f1 03       		.uleb128 0x3
+ 1370 00f2 08       		.uleb128 0x8
+ 1371 00f3 3A       		.uleb128 0x3a
+ 1372 00f4 0B       		.uleb128 0xb
+ 1373 00f5 3B       		.uleb128 0x3b
+ 1374 00f6 05       		.uleb128 0x5
+ 1375 00f7 49       		.uleb128 0x49
+ 1376 00f8 13       		.uleb128 0x13
+ 1377 00f9 3F       		.uleb128 0x3f
+ 1378 00fa 19       		.uleb128 0x19
+ 1379 00fb 3C       		.uleb128 0x3c
+ 1380 00fc 19       		.uleb128 0x19
+ 1381 00fd 00       		.byte	0
+ 1382 00fe 00       		.byte	0
+ 1383 00ff 11       		.uleb128 0x11
+ 1384 0100 35       		.uleb128 0x35
+ 1385 0101 00       		.byte	0
+ 1386 0102 49       		.uleb128 0x49
+ 1387 0103 13       		.uleb128 0x13
+ 1388 0104 00       		.byte	0
+ 1389 0105 00       		.byte	0
+ 1390 0106 12       		.uleb128 0x12
+ 1391 0107 34       		.uleb128 0x34
+ 1392 0108 00       		.byte	0
+ 1393 0109 03       		.uleb128 0x3
+ 1394 010a 0E       		.uleb128 0xe
+ 1395 010b 3A       		.uleb128 0x3a
+ 1396 010c 0B       		.uleb128 0xb
+ 1397 010d 3B       		.uleb128 0x3b
+ 1398 010e 05       		.uleb128 0x5
+ 1399 010f 49       		.uleb128 0x49
+ 1400 0110 13       		.uleb128 0x13
+ 1401 0111 3F       		.uleb128 0x3f
+ 1402 0112 19       		.uleb128 0x19
+ 1403 0113 3C       		.uleb128 0x3c
+ 1404 0114 19       		.uleb128 0x19
+ 1405 0115 00       		.byte	0
+ 1406 0116 00       		.byte	0
+ 1407 0117 13       		.uleb128 0x13
+ 1408 0118 34       		.uleb128 0x34
+ 1409 0119 00       		.byte	0
+ 1410 011a 03       		.uleb128 0x3
+ 1411 011b 0E       		.uleb128 0xe
+ 1412 011c 3A       		.uleb128 0x3a
+ 1413 011d 0B       		.uleb128 0xb
+ 1414 011e 3B       		.uleb128 0x3b
+ 1415 011f 0B       		.uleb128 0xb
+ 1416 0120 49       		.uleb128 0x49
+ 1417 0121 13       		.uleb128 0x13
+ 1418 0122 3F       		.uleb128 0x3f
+ 1419 0123 19       		.uleb128 0x19
+ 1420 0124 02       		.uleb128 0x2
+ 1421 0125 18       		.uleb128 0x18
+ 1422 0126 00       		.byte	0
+ 1423 0127 00       		.byte	0
+ 1424 0128 00       		.byte	0
+ 1425              		.section	.debug_aranges,"",%progbits
+ 1426 0000 1C000000 		.4byte	0x1c
+ 1427 0004 0200     		.2byte	0x2
+ 1428 0006 00000000 		.4byte	.Ldebug_info0
+ 1429 000a 04       		.byte	0x4
+ 1430 000b 00       		.byte	0
+ 1431 000c 0000     		.2byte	0
+ 1432 000e 0000     		.2byte	0
+ 1433 0010 00000000 		.4byte	.Ltext0
+ 1434 0014 D0030000 		.4byte	.Letext0-.Ltext0
+ 1435 0018 00000000 		.4byte	0
+ 1436 001c 00000000 		.4byte	0
+ 1437              		.section	.debug_line,"",%progbits
+ 1438              	.Ldebug_line0:
+ 1439 0000 28010000 		.section	.debug_str,"MS",%progbits,1
+ 1439      02009D00 
+ 1439      00000201 
+ 1439      FB0E0D00 
+ 1439      01010101 
+ 1440              	.LASF31:
+ 1441 0000 41484231 		.ascii	"AHB1LPENR\000"
+ 1441      4C50454E 
+ 1441      5200
+ 1442              	.LASF65:
+ 1443 000a 474E5520 		.ascii	"GNU C99 5.4.1 20160919 -mtune=cortex-m4 -mthumb -ma"
+ 1443      43393920 
+ 1443      352E342E 
+ 1443      31203230 
+ 1443      31363039 
+ 1444 003d 7263683D 		.ascii	"rch=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -g "
+ 1444      61726D76 
+ 1444      37652D6D 
+ 1444      202D6D66 
+ 1444      6C6F6174 
+ 1445 0070 2D4F3020 		.ascii	"-O0 -Os -std=gnu99 -fsingle-precision-constant\000"
+ 1445      2D4F7320 
+ 1445      2D737464 
+ 1445      3D676E75 
+ 1445      3939202D 
+ 1446              	.LASF38:
+ 1447 009f 5F726573 		.ascii	"_reserved_0x6c\000"
+ 1447      65727665 
+ 1447      645F3078 
+ 1447      366300
+ 1448              	.LASF19:
+ 1449 00ae 41504231 		.ascii	"APB1RSTR\000"
+ 1449      52535452 
+ 1449      00
+ 1450              	.LASF24:
+ 1451 00b7 41484232 		.ascii	"AHB2ENR\000"
+ 1451      454E5200 
+ 1452              	.LASF62:
+ 1453 00bf 73746570 		.ascii	"step_4_LEDs\000"
+ 1453      5F345F4C 
+ 1453      45447300 
+ 1454              	.LASF2:
+ 1455 00cb 73686F72 		.ascii	"short int\000"
+ 1455      7420696E 
+ 1455      7400
+ 1456              	.LASF9:
+ 1457 00d5 73697A65 		.ascii	"sizetype\000"
+ 1457      74797065 
+ 1457      00
+ 1458              	.LASF39:
+ 1459 00de 42444352 		.ascii	"BDCR\000"
+ 1459      00
+ 1460              	.LASF46:
+ 1461 00e3 434B4741 		.ascii	"CKGATENR\000"
+ 1461      54454E52 
+ 1461      00
+ 1462              	.LASF40:
+ 1463 00ec 5F726573 		.ascii	"_reserved_0x78\000"
+ 1463      65727665 
+ 1463      645F3078 
+ 1463      373800
+ 1464              	.LASF43:
+ 1465 00fb 504C4C49 		.ascii	"PLLI2SCFGR\000"
+ 1465      32534346 
+ 1465      475200
+ 1466              	.LASF11:
+ 1467 0106 5F5F7569 		.ascii	"__uint32_t\000"
+ 1467      6E743332 
+ 1467      5F7400
+ 1468              	.LASF42:
+ 1469 0111 53534347 		.ascii	"SSCGR\000"
+ 1469      5200
+ 1470              	.LASF49:
+ 1471 0117 4750494F 		.ascii	"GPIO_registers\000"
+ 1471      5F726567 
+ 1471      69737465 
+ 1471      727300
+ 1472              	.LASF70:
+ 1473 0126 626F6172 		.ascii	"board_current_state\000"
+ 1473      645F6375 
+ 1473      7272656E 
+ 1473      745F7374 
+ 1473      61746500 
+ 1474              	.LASF33:
+ 1475 013a 41484233 		.ascii	"AHB3LPENR\000"
+ 1475      4C50454E 
+ 1475      5200
+ 1476              	.LASF47:
+ 1477 0144 44434B43 		.ascii	"DCKCFGR2\000"
+ 1477      46475232 
+ 1477      00
+ 1478              	.LASF14:
+ 1479 014d 43464752 		.ascii	"CFGR\000"
+ 1479      00
+ 1480              	.LASF64:
+ 1481 0152 4C45445F 		.ascii	"LED_offset\000"
+ 1481      6F666673 
+ 1481      657400
+ 1482              	.LASF26:
+ 1483 015d 5F726573 		.ascii	"_reserved_0x3c\000"
+ 1483      65727665 
+ 1483      645F3078 
+ 1483      336300
+ 1484              	.LASF29:
+ 1485 016c 5F726573 		.ascii	"_reserved_0x48\000"
+ 1485      65727665 
+ 1485      645F3078 
+ 1485      343800
+ 1486              	.LASF27:
+ 1487 017b 41504231 		.ascii	"APB1ENR\000"
+ 1487      454E5200 
+ 1488              	.LASF66:
+ 1489 0183 7372632F 		.ascii	"src/sys/initial_LED.c\000"
+ 1489      7379732F 
+ 1489      696E6974 
+ 1489      69616C5F 
+ 1489      4C45442E 
+ 1490              	.LASF51:
+ 1491 0199 4F545950 		.ascii	"OTYPER\000"
+ 1491      455200
+ 1492              	.LASF45:
+ 1493 01a0 44434B43 		.ascii	"DCKCFGR\000"
+ 1493      46475200 
+ 1494              	.LASF41:
+ 1495 01a8 5F726573 		.ascii	"_reserved_0x7c\000"
+ 1495      65727665 
+ 1495      645F3078 
+ 1495      376300
+ 1496              	.LASF30:
+ 1497 01b7 5F726573 		.ascii	"_reserved_0x4c\000"
+ 1497      65727665 
+ 1497      645F3078 
+ 1497      346300
+ 1498              	.LASF25:
+ 1499 01c6 41484233 		.ascii	"AHB3ENR\000"
+ 1499      454E5200 
+ 1500              	.LASF63:
+ 1501 01ce 4C45445F 		.ascii	"LED_flag\000"
+ 1501      666C6167 
+ 1501      00
+ 1502              	.LASF61:
+ 1503 01d7 4750494F 		.ascii	"GPIOA\000"
+ 1503      4100
+ 1504              	.LASF6:
+ 1505 01dd 6C6F6E67 		.ascii	"long long int\000"
+ 1505      206C6F6E 
+ 1505      6720696E 
+ 1505      7400
+ 1506              	.LASF53:
+ 1507 01eb 50555044 		.ascii	"PUPDR\000"
+ 1507      5200
+ 1508              	.LASF4:
+ 1509 01f1 6C6F6E67 		.ascii	"long int\000"
+ 1509      20696E74 
+ 1509      00
+ 1510              	.LASF54:
+ 1511 01fa 42535252 		.ascii	"BSRR\000"
+ 1511      00
+ 1512              	.LASF69:
+ 1513 01ff 656E6162 		.ascii	"enable_GPIOA\000"
+ 1513      6C655F47 
+ 1513      50494F41 
+ 1513      00
+ 1514              	.LASF50:
+ 1515 020c 4D4F4445 		.ascii	"MODER\000"
+ 1515      5200
+ 1516              	.LASF20:
+ 1517 0212 41504232 		.ascii	"APB2RSTR\000"
+ 1517      52535452 
+ 1517      00
+ 1518              	.LASF1:
+ 1519 021b 756E7369 		.ascii	"unsigned char\000"
+ 1519      676E6564 
+ 1519      20636861 
+ 1519      7200
+ 1520              	.LASF67:
+ 1521 0229 2F686F6D 		.ascii	"/home/etudiant/Bureau/CutiaMeaMuzicala_modular_v10 "
+ 1521      652F6574 
+ 1521      75646961 
+ 1521      6E742F42 
+ 1521      75726561 
+ 1522 025c 28636F6D 		.ascii	"(comentat)) (copie 1)\000"
+ 1522      656E7461 
+ 1522      74292920 
+ 1522      28636F70 
+ 1522      69652031 
+ 1523              	.LASF28:
+ 1524 0272 41504232 		.ascii	"APB2ENR\000"
+ 1524      454E5200 
+ 1525              	.LASF68:
+ 1526 027a 5F5F4453 		.ascii	"__DSB\000"
+ 1526      4200
+ 1527              	.LASF7:
+ 1528 0280 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1528      206C6F6E 
+ 1528      6720756E 
+ 1528      7369676E 
+ 1528      65642069 
+ 1529              	.LASF12:
+ 1530 0297 75696E74 		.ascii	"uint32_t\000"
+ 1530      33325F74 
+ 1530      00
+ 1531              	.LASF8:
+ 1532 02a0 756E7369 		.ascii	"unsigned int\000"
+ 1532      676E6564 
+ 1532      20696E74 
+ 1532      00
+ 1533              	.LASF16:
+ 1534 02ad 41484232 		.ascii	"AHB2RSTR\000"
+ 1534      52535452 
+ 1534      00
+ 1535              	.LASF48:
+ 1536 02b6 5243435F 		.ascii	"RCC_registers\000"
+ 1536      72656769 
+ 1536      73746572 
+ 1536      7300
+ 1537              	.LASF60:
+ 1538 02c4 4750494F 		.ascii	"GPIOB\000"
+ 1538      4200
+ 1539              	.LASF57:
+ 1540 02ca 41465248 		.ascii	"AFRH\000"
+ 1540      00
+ 1541              	.LASF13:
+ 1542 02cf 504C4C43 		.ascii	"PLLCFGR\000"
+ 1542      46475200 
+ 1543              	.LASF56:
+ 1544 02d7 4146524C 		.ascii	"AFRL\000"
+ 1544      00
+ 1545              	.LASF35:
+ 1546 02dc 41504231 		.ascii	"APB1LPENR\000"
+ 1546      4C50454E 
+ 1546      5200
+ 1547              	.LASF10:
+ 1548 02e6 63686172 		.ascii	"char\000"
+ 1548      00
+ 1549              	.LASF3:
+ 1550 02eb 73686F72 		.ascii	"short unsigned int\000"
+ 1550      7420756E 
+ 1550      7369676E 
+ 1550      65642069 
+ 1550      6E7400
+ 1551              	.LASF18:
+ 1552 02fe 5F726573 		.ascii	"_reserved_0x1c\000"
+ 1552      65727665 
+ 1552      645F3078 
+ 1552      316300
+ 1553              	.LASF32:
+ 1554 030d 41484232 		.ascii	"AHB2LPENR\000"
+ 1554      4C50454E 
+ 1554      5200
+ 1555              	.LASF52:
+ 1556 0317 4F535045 		.ascii	"OSPEEDR\000"
+ 1556      45445200 
+ 1557              	.LASF5:
+ 1558 031f 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1558      20756E73 
+ 1558      69676E65 
+ 1558      6420696E 
+ 1558      7400
+ 1559              	.LASF34:
+ 1560 0331 5F726573 		.ascii	"_reserved_0x5c\000"
+ 1560      65727665 
+ 1560      645F3078 
+ 1560      356300
+ 1561              	.LASF23:
+ 1562 0340 41484231 		.ascii	"AHB1ENR\000"
+ 1562      454E5200 
+ 1563              	.LASF71:
+ 1564 0348 72656164 		.ascii	"read_value_switch\000"
+ 1564      5F76616C 
+ 1564      75655F73 
+ 1564      77697463 
+ 1564      6800
+ 1565              	.LASF0:
+ 1566 035a 7369676E 		.ascii	"signed char\000"
+ 1566      65642063 
+ 1566      68617200 
+ 1567              	.LASF37:
+ 1568 0366 5F726573 		.ascii	"_reserved_0x68\000"
+ 1568      65727665 
+ 1568      645F3078 
+ 1568      363800
+ 1569              	.LASF59:
+ 1570 0375 666F7572 		.ascii	"four_LED_band\000"
+ 1570      5F4C4544 
+ 1570      5F62616E 
+ 1570      6400
+ 1571              	.LASF15:
+ 1572 0383 41484231 		.ascii	"AHB1RSTR\000"
+ 1572      52535452 
+ 1572      00
+ 1573              	.LASF21:
+ 1574 038c 5F726573 		.ascii	"_reserved_0x28\000"
+ 1574      65727665 
+ 1574      645F3078 
+ 1574      323800
+ 1575              	.LASF17:
+ 1576 039b 41484233 		.ascii	"AHB3RSTR\000"
+ 1576      52535452 
+ 1576      00
+ 1577              	.LASF58:
+ 1578 03a4 696E6974 		.ascii	"initialize_LEDs\000"
+ 1578      69616C69 
+ 1578      7A655F4C 
+ 1578      45447300 
+ 1579              	.LASF44:
+ 1580 03b4 504C4C53 		.ascii	"PLLSAICFGR\000"
+ 1580      41494346 
+ 1580      475200
+ 1581              	.LASF55:
+ 1582 03bf 4C434B52 		.ascii	"LCKR\000"
+ 1582      00
+ 1583              	.LASF36:
+ 1584 03c4 41504232 		.ascii	"APB2LPENR\000"
+ 1584      4C50454E 
+ 1584      5200
+ 1585              	.LASF22:
+ 1586 03ce 5F726573 		.ascii	"_reserved_0x2c\000"
+ 1586      65727665 
+ 1586      645F3078 
+ 1586      326300
+ 1587              		.ident	"GCC: (15:5.4.1+svn241155-1) 5.4.1 20160919"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 initial_LED.c
+     /tmp/ccBIW2sN.s:21     .text:0000000000000000 $t
+     /tmp/ccBIW2sN.s:26     .text:0000000000000000 initialize_LEDs
+     /tmp/ccBIW2sN.s:79     .text:000000000000003c $d
+     /tmp/ccBIW2sN.s:84     .text:0000000000000044 $t
+     /tmp/ccBIW2sN.s:89     .text:0000000000000044 board_current_state
+     /tmp/ccBIW2sN.s:155    .text:00000000000000a8 $d
+                            *COM*:0000000000000004 LED_flag
+     /tmp/ccBIW2sN.s:160    .text:00000000000000b0 $t
+     /tmp/ccBIW2sN.s:165    .text:00000000000000b0 read_value_switch
+     /tmp/ccBIW2sN.s:181    .text:00000000000000bc $d
+     /tmp/ccBIW2sN.s:185    .text:00000000000000c0 $t
+     /tmp/ccBIW2sN.s:190    .text:00000000000000c0 four_LED_band
+     /tmp/ccBIW2sN.s:505    .text:00000000000002ec $d
+                            *COM*:0000000000000004 step_4_LEDs
+                            *COM*:0000000000000004 LED_offset
+     /tmp/ccBIW2sN.s:511    .text:00000000000002fc $t
+     /tmp/ccBIW2sN.s:624    .text:00000000000003c4 $d
+                     .debug_frame:0000000000000010 $d
+
+UNDEFINED SYMBOLS
+RCC
+GPIOA
+GPIOB

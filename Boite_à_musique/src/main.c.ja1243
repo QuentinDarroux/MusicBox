@@ -1,0 +1,236 @@
+#include <stdio.h>
+#include "sys/devices.h"
+#include "sys/systick.h"
+#include "sys/serial_io.h"  
+
+#include "sys/functions_init.h"
+#include "sys/song_definitions.h"
+#include "sys/sing_song.h"
+#include "sys/potentiometer.h"
+#include "sys/button.h"
+#include "sys/interrupt_handlers.h"
+
+
+volatile uint32_t flag_play_note;   /*este flagul pentru handler care ar trebui sa fie schimbat in flag_systic */
+volatile uint32_t counter;           /*contine valoarea curenta a delay ului*/
+volatile uint32_t play_pause;       /*se face 1 pentru pauza si 0 pentru play */
+volatile uint32_t next;             /*se face 1 cand apas pentru urmatorul cantec*/
+volatile uint32_t LED_flag;         /*contine flagul pentru schimbarea culorii Tri-LED-ului*/
+volatile uint32_t LED_offset;       /*permite repetarea jocului de lumini in functia four_LED_band */
+/*interrupt variables*/
+
+volatile uint32_t i;
+volatile uint32_t j;
+
+
+Note *song_list[NUMBER_SONGS]={harry_potter_theme, mon_beau_sapin, au_clair_de_la_lune};
+
+void initialize_LEDs();
+void board_current_state();
+void four_LED_band();
+
+int main() {
+    
+    SysTick_init(1000);     /* Starts systick */
+    enable_USART2();        /* En usart */
+    init_TIM2(); /*WASS NOT HERE before*/
+    init_buzzer_GPIOB();    /* setam portul pe AF */
+    configuration_potentiometre_PB0();
+    setup_ADC();
+    
+    button_init();
+    button_irq_init();
+    
+    button_init_2();
+    button_irq_init2();
+    
+    initialize_LEDs();
+    
+   /* int i = 0, j = 0;*/
+   
+   LED_offset = 0;
+   i = 0;
+   j = 0;
+   play_pause = 0;
+   next = 0;
+   
+    while(1)
+        {
+            
+            if(i == NUMBER_SONGS) /**/
+                {
+                    i = 0;
+                }
+            
+            while(song_list[i][j].freq != 0 && song_list[i][j].duree != 0)  
+                {
+                    LED_flag = 0;
+                    board_current_state();
+                    four_LED_band();
+                    
+                    sing_note(song_list[i][j].freq, song_list[i][j].duree);
+                    pause_entre_note();
+                    
+                    board_current_state();
+                    while(play_pause == 1)
+                        {
+                            if(next == 1)
+                                {
+                                    play_pause = 0;
+                                }
+                        }
+                    
+                    /*j++;*/
+                    
+                    if(next == 1)
+                        {
+                            break; /*We will make next = 0 after the pause finished*/ 
+                        }
+                        
+                    j++;
+                }
+            
+            LED_flag = 2; /*pentru cazul in care nu folosesc intrerupere*/
+            four_LED_band();
+            board_current_state();
+            
+            pause_entre_songs();
+            /*while(counter != 0);*/
+            
+            next = 0;
+            i++;
+            j = 0;
+            LED_offset = 0;
+            
+            
+             
+        }
+    
+    
+    return 0;
+
+    
+}   
+
+
+void initialize_LEDs()
+{
+    
+    enable_GPIOA();
+    
+    /* Tri-LED setup */
+    
+    GPIOA.MODER = (GPIOA.MODER & ~(0x3F << 16)) | (0x15 << 16);
+    GPIOA.OTYPER = GPIOA.OTYPER & ~(0x7 << 8);
+    
+    /* Four-LEDs-Band */
+    
+    GPIOA.MODER = (GPIOA.MODER & ~(0xFF << 8)) | (0x55 << 8);
+    GPIOA.OTYPER = GPIOA.OTYPER & ~(0xF << 4);
+    
+}
+
+
+void board_current_state()
+{
+    
+    if(LED_flag == 0)  /*Play song*/
+        {
+            
+            GPIOA.ODR = GPIOA.ODR & ~(1 << 8); /* Red */
+            GPIOA.ODR = GPIOA.ODR & ~(1 << 10); /* Blue */
+            
+            GPIOA.ODR = GPIOA.ODR | (0b1 << 9) ; /* Green */
+            
+        }
+    else if(LED_flag == 1)  /*Pause song*/
+        {
+            
+            GPIOA.ODR = GPIOA.ODR & ~(1 << 9); /* Green */
+            GPIOA.ODR = GPIOA.ODR & ~(1 << 10); /* Blue */
+            
+            GPIOA.ODR = GPIOA.ODR | (0b1 << 8) ; /* Red */
+            
+        }
+    else if(LED_flag == 2)  /*Change song*/
+        {
+            GPIOA.ODR = GPIOA.ODR & ~(1 << 9); /* Green */
+            GPIOA.ODR = GPIOA.ODR & ~(1 << 8); /* Red */
+            
+            GPIOA.ODR = GPIOA.ODR | (0b1 << 10) ; /* Blue */
+        }
+    
+    
+}
+
+void four_LED_band()
+{
+    if(LED_flag == 2)
+        {
+            GPIOA.ODR = GPIOA.ODR & ~(0xF << 4);
+        }
+    else
+        {
+            if(j == 0 + LED_offset) 
+                {
+                    GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1010 << 4);
+                }
+
+            if(j == 1 + LED_offset) 
+                {
+                    GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0101 << 4);
+                }
+            
+            if(j == 2 + LED_offset) 
+                {
+                    GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0011 << 4);
+                }
+
+            if(j == 3 + LED_offset) 
+                {
+                    GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1100 << 4);
+                }
+                
+            if(j == 4 + LED_offset) 
+                {
+                    GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b0110 << 4);
+                }
+
+            if(j == 5 + LED_offset) 
+                {
+                    GPIOA.ODR = (GPIOA.ODR & ~(0xF << 4)) | (0b1001 << 4);
+                    LED_offset = LED_offset + 6;
+                }    
+        }
+    
+    
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
